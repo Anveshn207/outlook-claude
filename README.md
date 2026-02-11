@@ -1,6 +1,13 @@
 # Outlook Claude
 
-Microsoft Graph API integration for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Provides an MCP server that gives Claude direct access to your Outlook email, calendar, and contacts.
+Microsoft Graph API integration for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Provides MCP servers that give Claude direct access to your Outlook email, calendar, contacts, and Windows desktop applications.
+
+## Packages
+
+| Package | Description |
+|---------|-------------|
+| `@outlook-claude/outlook` | Microsoft Graph MCP server (email, calendar, contacts) |
+| `@outlook-claude/uia` | Windows UI Automation MCP server (desktop app interaction) |
 
 ## Features
 
@@ -10,7 +17,7 @@ Microsoft Graph API integration for [Claude Code](https://docs.anthropic.com/en/
 
 **Contacts** - List, search, create, update, and delete contacts
 
-**Windows UI Automation** - Bonus MCP server for interacting with desktop apps via PowerShell and .NET UIAutomation
+**Windows UI Automation** - Interact with desktop apps via PowerShell and .NET UIAutomation
 
 ## Prerequisites
 
@@ -47,12 +54,12 @@ Edit `.env` and set `MICROSOFT_CLIENT_ID` to your Azure app's client ID.
 ### 3. Authenticate
 
 ```bash
-npm run auth
+npm run auth -w @outlook-claude/outlook
 ```
 
 This opens a device code flow in your browser. Sign in with your Microsoft account. The token is cached locally for future use.
 
-### 4. Add MCP Server to Claude Code
+### 4. Add MCP Servers to Claude Code
 
 Add to your Claude Code settings (`~/.claude/settings.json`):
 
@@ -61,16 +68,22 @@ Add to your Claude Code settings (`~/.claude/settings.json`):
   "mcpServers": {
     "outlook": {
       "command": "npx",
-      "args": ["tsx", "/path/to/outlook-claude/src/mcp-server.ts"],
+      "args": ["tsx", "/path/to/outlook-claude/packages/outlook/src/mcp-server.ts"],
       "env": {
         "MICROSOFT_CLIENT_ID": "your-client-id"
       }
+    },
+    "windows-uia": {
+      "command": "npx",
+      "args": ["tsx", "/path/to/outlook-claude/packages/uia/src/uia-mcp-server.ts"]
     }
   }
 }
 ```
 
 ## Available Tools
+
+### Outlook (Microsoft Graph)
 
 | Tool | Description |
 |------|-------------|
@@ -93,34 +106,60 @@ Add to your Claude Code settings (`~/.claude/settings.json`):
 | `create_contact` | Create a new contact |
 | `delete_contact` | Delete a contact |
 
+### Windows UI Automation
+
+| Tool | Description |
+|------|-------------|
+| `list_windows` | List open windows |
+| `focus_window` | Focus/activate a window |
+| `find_elements` | Find UI elements |
+| `element_tree` | Get UI element tree |
+| `click_element` | Click a UI element |
+| `send_keys` | Send keystrokes |
+| `read_text` | Read text from an element |
+| `screenshot` | Take a screenshot |
+
 ## Scripts
 
 ```bash
-npm run auth       # Authenticate with Microsoft
-npm run dev        # Run MCP server (development)
-npm run build      # Compile TypeScript
-npm run start      # Run compiled MCP server
-npm run lint       # Check for lint errors
-npm run lint:fix   # Auto-fix lint errors
-npm run uia        # Run Windows UI Automation MCP server
+npm install                              # Install all workspace deps
+npm run build                            # Build both packages
+npm run lint                             # Lint both packages
+npm run lint:fix                         # Auto-fix lint errors
+npm run dev -w @outlook-claude/outlook   # Run Graph MCP server (dev)
+npm run dev -w @outlook-claude/uia       # Run UIA MCP server (dev)
+npm run auth -w @outlook-claude/outlook  # Authenticate with Microsoft
 ```
 
 ## Project Structure
 
 ```
-src/
-  auth.ts              # MSAL device code auth with token caching
-  graph-client.ts      # Authenticated Microsoft Graph client factory
-  mcp-server.ts        # MCP server exposing all tools over stdio
-  uia-mcp-server.ts    # Windows UI Automation MCP server
-  index.ts             # Library entry point
-  services/
-    email.ts           # Email CRUD operations
-    calendar.ts        # Calendar CRUD operations
-    contacts.ts        # Contacts CRUD operations
-    uia-*.ts           # UI Automation services
-  scripts/
-    uia-*.ps1          # PowerShell UI Automation scripts
+outlook-claude/
+  packages/
+    outlook/                 # @outlook-claude/outlook
+      src/
+        auth.ts              # MSAL device code auth with token caching
+        graph-client.ts      # Authenticated Microsoft Graph client factory
+        mcp-server.ts        # MCP server exposing all tools over stdio
+        index.ts             # Library entry point
+        services/
+          email.ts           # Email CRUD operations
+          calendar.ts        # Calendar CRUD operations
+          contacts.ts        # Contacts CRUD operations
+    uia/                     # @outlook-claude/uia
+      src/
+        uia-mcp-server.ts   # Windows UI Automation MCP server
+        services/
+          uia-powershell.ts  # PowerShell execution engine
+          uia-windows.ts     # Window operations
+          uia-elements.ts    # Element discovery
+          uia-actions.ts     # Click, type, read actions
+          uia-screenshot.ts  # Screenshot capture
+        scripts/
+          *.ps1              # PowerShell UI Automation scripts
+  .claude/commands/
+    graph.md                 # /graph slash command
+    uia.md                   # /uia slash command
 ```
 
 ## License

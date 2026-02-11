@@ -1,0 +1,20 @@
+{
+  "name": "@outlook-claude/outlook",
+  "version": "1.0.0",
+  "description": "Microsoft Graph API MCP server for Claude Code",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx src/mcp-server.ts",
+    "start": "node dist/mcp-server.js",
+    "build": "tsc",
+    "auth": "tsx src/auth-setup.ts"
+  },
+  "dependencies": {
+    "@azure/msal-node": "^2.16.0",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "dotenv": "^17.2.4",
+    "isomorphic-fetch": "^3.0.0"
+  }
+}

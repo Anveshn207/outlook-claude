@@ -1,0 +1,15 @@
+{
+  "name": "@outlook-claude/uia",
+  "version": "1.0.0",
+  "description": "Windows UI Automation MCP server for Claude Code",
+  "type": "module",
+  "main": "dist/uia-mcp-server.js",
+  "scripts": {
+    "dev": "tsx src/uia-mcp-server.ts",
+    "start": "node dist/uia-mcp-server.js",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}
