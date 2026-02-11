@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Plus, CheckCircle2, Clock, AlertTriangle } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Plus, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -63,7 +62,6 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function TasksPage() {
-  const router = useRouter();
   const { user } = useAuthStore();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");

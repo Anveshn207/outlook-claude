@@ -11,6 +11,8 @@ import { InterviewsModule } from './modules/interviews/interviews.module';
 import { ResumesModule } from './modules/resumes/resumes.module';
 import { SearchModule } from './modules/search/search.module';
 import { ActivitiesModule } from './modules/activities/activities.module';
+import { ReportsModule } from './modules/reports/reports.module';
+import { TasksModule } from './modules/tasks/tasks.module';
 
 @Module({
   imports: [
@@ -29,6 +31,8 @@ import { ActivitiesModule } from './modules/activities/activities.module';
     ResumesModule,
     SearchModule,
     ActivitiesModule,
+    ReportsModule,
+    TasksModule,
   ],
 })
 export class AppModule {}
