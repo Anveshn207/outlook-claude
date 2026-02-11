@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +43,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function ClientsPage() {
+  const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -175,6 +177,7 @@ export default function ClientsPage() {
         fetchData={fetchClients}
         searchPlaceholder="Search clients..."
         keyExtractor={(c) => c.id}
+        onRowClick={(c) => router.push(`/clients/${c.id}`)}
         emptyMessage="No clients found. Add your first client to get started."
         toolbar={
           <Select value={statusFilter} onValueChange={setStatusFilter}>

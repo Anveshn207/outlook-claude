@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Menu, Search, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
@@ -11,11 +12,16 @@ interface NavbarProps {
 }
 
 export function Navbar({ title, onMenuClick }: NavbarProps) {
+  const router = useRouter();
   const { user } = useAuthStore();
 
   const initials = user
     ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`
     : "U";
+
+  const handleSearchFocus = () => {
+    router.push("/search");
+  };
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-white px-4 sm:px-6">
@@ -32,12 +38,15 @@ export function Navbar({ title, onMenuClick }: NavbarProps) {
 
       {/* Right: search, notifications, avatar */}
       <div className="flex items-center gap-3">
-        <div className="relative hidden sm:block">
+        <div
+          className="relative hidden cursor-pointer sm:block"
+          onClick={handleSearchFocus}
+        >
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search..."
-            className="h-9 w-56 bg-muted pl-9 text-sm"
+            placeholder="Search candidates..."
+            className="h-9 w-56 cursor-pointer bg-muted pl-9 text-sm"
             readOnly
           />
         </div>

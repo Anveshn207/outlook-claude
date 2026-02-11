@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -10,11 +10,14 @@ import {
   Briefcase,
   Building2,
   Linkedin,
-  Clock,
   Send,
   Calendar,
   Loader2,
   User,
+  Upload,
+  FileText,
+  Star,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -116,6 +119,8 @@ export default function CandidateProfilePage() {
   const [interviews, setInterviews] = useState<InterviewRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     async function load() {
@@ -136,6 +141,67 @@ export default function CandidateProfilePage() {
     }
     load();
   }, [params.id]);
+
+  const reloadResumes = useCallback(async () => {
+    try {
+      const resumes = await apiFetch<ResumeRow[]>(
+        `/resumes/candidate/${params.id}`,
+      );
+      setCandidate((prev) => (prev ? { ...prev, resumes } : prev));
+    } catch (err) {
+      console.error("[CandidateProfile] Reload resumes failed:", err);
+    }
+  }, [params.id]);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !params.id) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("auth_token")
+          : null;
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"}/resumes/upload/${params.id}`,
+        {
+          method: "POST",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: formData,
+        },
+      );
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err);
+      }
+      await reloadResumes();
+    } catch (err) {
+      console.error("[CandidateProfile] Upload failed:", err);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleDeleteResume = async (resumeId: string) => {
+    try {
+      await apiFetch(`/resumes/${resumeId}`, { method: "DELETE" });
+      await reloadResumes();
+    } catch (err) {
+      console.error("[CandidateProfile] Delete resume failed:", err);
+    }
+  };
+
+  const handleSetPrimary = async (resumeId: string) => {
+    try {
+      await apiFetch(`/resumes/${resumeId}/primary`, { method: "PATCH" });
+      await reloadResumes();
+    } catch (err) {
+      console.error("[CandidateProfile] Set primary failed:", err);
+    }
+  };
 
   if (loading) {
     return (
@@ -344,34 +410,87 @@ export default function CandidateProfilePage() {
 
           {/* Resumes */}
           <Card className="lg:col-span-2">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base">Resumes</CardTitle>
+              <div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,.txt,.rtf"
+                  className="hidden"
+                  onChange={handleUpload}
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={uploading}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {uploading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Upload className="h-4 w-4" />
+                  )}
+                  {uploading ? "Uploading..." : "Upload Resume"}
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {candidate.resumes.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No resumes uploaded yet.
-                </p>
+                <div className="flex h-24 flex-col items-center justify-center rounded-lg border border-dashed border-border">
+                  <FileText className="mb-2 h-6 w-6 text-muted-foreground/50" />
+                  <p className="text-sm text-muted-foreground">
+                    No resumes uploaded yet. Upload a PDF, DOC, or DOCX file.
+                  </p>
+                </div>
               ) : (
                 <div className="space-y-2">
                   {candidate.resumes.map((r) => (
                     <div
                       key={r.id}
-                      className="flex items-center justify-between rounded-md border border-border px-3 py-2"
+                      className="flex items-center justify-between rounded-md border border-border px-3 py-2.5"
                     >
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">
-                          {r.fileName}
-                        </span>
+                      <div className="flex items-center gap-2.5">
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <span className="text-sm font-medium">
+                            {r.fileName}
+                          </span>
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            {(r.fileSize / 1024).toFixed(0)} KB
+                          </span>
+                        </div>
                         {r.isPrimary && (
-                          <Badge variant="secondary" className="text-xs">
-                            Primary
+                          <Badge
+                            variant="secondary"
+                            className="text-xs"
+                          >
+                            <Star className="mr-1 h-3 w-3" /> Primary
                           </Badge>
                         )}
                       </div>
-                      <span className="text-xs text-muted-foreground">
-                        {(r.fileSize / 1024).toFixed(0)} KB
-                      </span>
+                      <div className="flex items-center gap-1">
+                        {!r.isPrimary && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 text-xs text-muted-foreground"
+                            onClick={() => handleSetPrimary(r.id)}
+                            title="Set as primary"
+                          >
+                            <Star className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 text-xs text-red-500 hover:text-red-700"
+                          onClick={() => handleDeleteResume(r.id)}
+                          title="Delete resume"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>

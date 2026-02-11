@@ -11,7 +11,8 @@
       "Bash(powershell.exe -NoProfile -Command \"& ''C:\\\\Program Files\\\\PostgreSQL\\\\16\\\\bin\\\\pg_isready.exe'' -h localhost -p 5432\")",
       "Bash(powershell.exe:*)",
       "Bash(netstat:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(findstr:*)"
     ]
   }
 }

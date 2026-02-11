@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -62,6 +63,7 @@ const jobTypeLabels: Record<string, string> = {
 };
 
 export default function JobsPage() {
+  const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -218,6 +220,7 @@ export default function JobsPage() {
         fetchData={fetchJobs}
         searchPlaceholder="Search jobs..."
         keyExtractor={(j) => j.id}
+        onRowClick={(j) => router.push(`/jobs/${j.id}`)}
         emptyMessage="No jobs found. Create your first job to get started."
         toolbar={
           <Select value={statusFilter} onValueChange={setStatusFilter}>

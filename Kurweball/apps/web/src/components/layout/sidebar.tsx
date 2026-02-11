@@ -8,6 +8,7 @@ import {
   Briefcase,
   Building2,
   Kanban,
+  ClipboardList,
   BarChart3,
   Settings,
   LogOut,
@@ -23,6 +24,7 @@ const navigation = [
   { name: "Jobs", href: "/jobs", icon: Briefcase },
   { name: "Clients", href: "/clients", icon: Building2 },
   { name: "Pipeline", href: "/pipeline", icon: Kanban },
+  { name: "Tasks", href: "/tasks", icon: ClipboardList },
   { name: "Reports", href: "/reports", icon: BarChart3 },
   { name: "Settings", href: "/settings", icon: Settings },
 ];

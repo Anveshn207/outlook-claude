@@ -8,6 +8,9 @@ import { ClientsModule } from './modules/clients/clients.module';
 import { PipelineModule } from './modules/pipeline/pipeline.module';
 import { SubmissionsModule } from './modules/submissions/submissions.module';
 import { InterviewsModule } from './modules/interviews/interviews.module';
+import { ResumesModule } from './modules/resumes/resumes.module';
+import { SearchModule } from './modules/search/search.module';
+import { ActivitiesModule } from './modules/activities/activities.module';
 
 @Module({
   imports: [
@@ -23,6 +26,9 @@ import { InterviewsModule } from './modules/interviews/interviews.module';
     PipelineModule,
     SubmissionsModule,
     InterviewsModule,
+    ResumesModule,
+    SearchModule,
+    ActivitiesModule,
   ],
 })
 export class AppModule {}
