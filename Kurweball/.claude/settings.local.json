@@ -12,7 +12,8 @@
       "Bash(powershell.exe:*)",
       "Bash(netstat:*)",
       "Bash(taskkill:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(powershell:*)"
     ]
   }
 }
