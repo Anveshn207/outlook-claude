@@ -79,7 +79,7 @@ interface ClientDetail {
   jobs: JobRow[];
   createdBy: { id: string; firstName: string; lastName: string };
   createdAt: string;
-  _count: { jobs: number; contacts: number };
+  _count?: { jobs: number; contacts: number };
 }
 
 // --- Status colors ---
@@ -166,7 +166,6 @@ export default function ClientDetailPage() {
           ? {
               ...prev,
               contacts: [...prev.contacts, newContact],
-              _count: { ...prev._count, contacts: prev._count.contacts + 1 },
             }
           : prev,
       );
@@ -240,10 +239,10 @@ export default function ClientDetailPage() {
                     {client.industry}
                   </span>
                 )}
-                {client._count.jobs > 0 && (
+                {client.jobs?.length > 0 && (
                   <span className="flex items-center gap-1">
                     <Users className="h-3.5 w-3.5" />
-                    {client._count.jobs} job{client._count.jobs !== 1 ? "s" : ""}
+                    {client.jobs.length} job{client.jobs.length !== 1 ? "s" : ""}
                   </span>
                 )}
               </div>
