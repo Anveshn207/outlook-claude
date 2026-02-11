@@ -26,6 +26,7 @@ async function main() {
   });
   const loginData = await loginResp.json();
   const token = loginData.accessToken;
+  const userData = loginData.user;
   console.log('  Token obtained:', token ? 'yes' : 'no');
 
   if (!token) {
@@ -65,11 +66,12 @@ async function main() {
   await page.waitForTimeout(1000);
   await page.screenshot({ path: `${screenshotDir}/01-login.png`, fullPage: true });
 
-  // Step 2: Inject auth token into localStorage
-  await page.evaluate((t) => {
+  // Step 2: Inject auth token and user data into localStorage
+  await page.evaluate(({ t, u }) => {
     localStorage.setItem('auth_token', t);
-  }, token);
-  console.log('  Auth token injected into localStorage');
+    localStorage.setItem('auth_user', JSON.stringify(u));
+  }, { t: token, u: userData });
+  console.log('  Auth token + user data injected into localStorage');
 
   // Step 3: Screenshot all dashboard pages
   let counter = 2;
