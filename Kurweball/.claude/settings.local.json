@@ -14,7 +14,13 @@
       "Bash(taskkill:*)",
       "Bash(findstr:*)",
       "Bash(powershell:*)",
-      "Bash(ping:*)"
+      "Bash(ping:*)",
+      "Bash(xargs basename:*)",
+      "Bash(dir:*)",
+      "Bash(timeout:*)",
+      "Bash(tasklist:*)",
+      "Bash(xargs:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbWxpa2NubmEwMDAyNjEyb2p5eHEzOXRnIiwiZW1haWwiOiJhZG1pbkBhY21lLmNvbSIsInRlbmFudElkIjoiY21saWtjbmZkMDAwMDYxMm9jYjM5a25heCIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc3MDg0NjcxNiwiZXhwIjoxNzcwODQ3NjE2fQ.esEV-a9G8dOdkGocx4Dd8aOUqy19ijn5oDrYbBEwF-M\":*)"
     ]
   }
 }

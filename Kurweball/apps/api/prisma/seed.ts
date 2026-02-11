@@ -9,6 +9,7 @@ async function main() {
   // ─── Clear existing data (reverse dependency order) ─────────────────────────
   console.log('Clearing existing data...');
   await prisma.$transaction([
+    prisma.notification.deleteMany(),
     prisma.submissionStageHistory.deleteMany(),
     prisma.interview.deleteMany(),
     prisma.submission.deleteMany(),
@@ -1653,6 +1654,99 @@ async function main() {
   ]);
   console.log(`  Created ${savedViews.length} saved views`);
 
+  // ─── 14. Notifications ─────────────────────────────────────────────────────
+  console.log('\nCreating notifications...');
+  const notifications = await prisma.$transaction([
+    prisma.notification.create({
+      data: {
+        tenantId: tenant.id,
+        userId: recruiter1.id,
+        type: 'INTERVIEW_SCHEDULED',
+        title: 'Interview Scheduled',
+        message: 'Alex Thompson — Senior React Developer (TECHNICAL)',
+        link: '/interviews',
+        isRead: false,
+      },
+    }),
+    prisma.notification.create({
+      data: {
+        tenantId: tenant.id,
+        userId: recruiter1.id,
+        type: 'STAGE_CHANGE',
+        title: 'Stage Changed',
+        message: 'Kevin O\'Brien moved to Shortlisted for Senior React Developer',
+        link: '/pipeline',
+        isRead: true,
+      },
+    }),
+    prisma.notification.create({
+      data: {
+        tenantId: tenant.id,
+        userId: recruiter1.id,
+        type: 'TASK_ASSIGNED',
+        title: 'Task Assigned',
+        message: 'You have been assigned: Prep Alex Thompson for TechCorp technical interview',
+        link: '/tasks',
+        isRead: false,
+      },
+    }),
+    prisma.notification.create({
+      data: {
+        tenantId: tenant.id,
+        userId: recruiter2.id,
+        type: 'INTERVIEW_SCHEDULED',
+        title: 'Interview Scheduled',
+        message: 'Marcus Johnson — Java Backend Engineer (TECHNICAL)',
+        link: '/interviews',
+        isRead: false,
+      },
+    }),
+    prisma.notification.create({
+      data: {
+        tenantId: tenant.id,
+        userId: recruiter2.id,
+        type: 'STAGE_CHANGE',
+        title: 'Stage Changed',
+        message: 'Michael Chen moved to Offered for Financial Analyst',
+        link: '/pipeline',
+        isRead: true,
+      },
+    }),
+    prisma.notification.create({
+      data: {
+        tenantId: tenant.id,
+        userId: recruiter2.id,
+        type: 'TASK_ASSIGNED',
+        title: 'Task Assigned',
+        message: 'You have been assigned: Follow up on Michael Chen offer response',
+        link: '/tasks',
+        isRead: false,
+      },
+    }),
+    prisma.notification.create({
+      data: {
+        tenantId: tenant.id,
+        userId: admin.id,
+        type: 'SYSTEM',
+        title: 'Welcome to Kurweball',
+        message: 'Your recruiting platform is ready. Start by adding candidates and jobs.',
+        isRead: true,
+      },
+    }),
+    prisma.notification.create({
+      data: {
+        tenantId: tenant.id,
+        userId: admin.id,
+        type: 'NEW_CANDIDATE',
+        title: 'New Candidate Added',
+        message: 'Fatima Hassan was added to the candidate pool by Mike Davis',
+        link: '/candidates',
+        isRead: false,
+      },
+    }),
+  ]);
+  console.log(`  Created ${notifications.length} notifications`);
+
   // ─── Summary ────────────────────────────────────────────────────────────────
   console.log('\n========================================');
   console.log('Seed completed successfully!');
@@ -1670,6 +1764,7 @@ async function main() {
   console.log(`  Tasks:       ${tasks.length}`);
   console.log(`  Custom Fields: ${customFields.length}`);
   console.log(`  Saved Views: ${savedViews.length}`);
+  console.log(`  Notifications: ${notifications.length}`);
   console.log('\nLogin credentials:');
   console.log('  admin@acme.com    / password123 (ADMIN)');
   console.log('  sarah@acme.com    / password123 (RECRUITER)');

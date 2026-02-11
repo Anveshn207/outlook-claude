@@ -3,15 +3,19 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, NotificationType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateInterviewDto } from './dto/create-interview.dto';
 import { UpdateInterviewDto } from './dto/update-interview.dto';
 import { QueryInterviewsDto } from './dto/query-interviews.dto';
 
 @Injectable()
 export class InterviewsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   async findAll(tenantId: string, query: QueryInterviewsDto) {
     const {
@@ -134,7 +138,7 @@ export class InterviewsService {
       }
     }
 
-    return this.prisma.interview.create({
+    const interview = await this.prisma.interview.create({
       data: {
         tenantId,
         createdById: userId,
@@ -161,6 +165,22 @@ export class InterviewsService {
         },
       },
     });
+
+    // Notify the interview creator (recruiter) about the scheduled interview
+    try {
+      await this.notificationsService.createNotification({
+        tenantId,
+        userId,
+        type: NotificationType.INTERVIEW_SCHEDULED,
+        title: 'Interview Scheduled',
+        message: `${interview.candidate.firstName} ${interview.candidate.lastName} — ${interview.job.title} (${dto.type.replace('_', ' ')})`,
+        link: `/interviews`,
+      });
+    } catch (err) {
+      console.error('[InterviewsService] Failed to create notification:', err);
+    }
+
+    return interview;
   }
 
   async update(tenantId: string, id: string, dto: UpdateInterviewDto) {

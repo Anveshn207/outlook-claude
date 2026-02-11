@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Menu, Search, Bell } from "lucide-react";
+import { Menu, Search } from "lucide-react";
+import { NotificationBell } from "@/components/shared/notification-bell";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { Input } from "@/components/ui/input";
@@ -51,10 +52,7 @@ export function Navbar({ title, onMenuClick }: NavbarProps) {
           />
         </div>
 
-        <button className="relative rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
-          <Bell className="h-5 w-5" />
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary" />
-        </button>
+        <NotificationBell />
 
         <div
           className={cn(

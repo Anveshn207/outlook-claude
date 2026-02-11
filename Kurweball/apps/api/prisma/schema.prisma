@@ -121,6 +121,16 @@ enum CustomFieldType {
   CURRENCY
 }
 
+enum NotificationType {
+  SUBMISSION_UPDATE
+  INTERVIEW_SCHEDULED
+  TASK_ASSIGNED
+  TASK_DUE
+  STAGE_CHANGE
+  NEW_CANDIDATE
+  SYSTEM
+}
+
 // ─── Models ──────────────────────────────────────────────────────────────────
 
 model Tenant {
@@ -144,6 +154,7 @@ model Tenant {
   customFields    CustomField[]
   savedViews      SavedView[]
   pipelineTemplates PipelineTemplate[]
+  notifications     Notification[]
 
   @@map("tenants")
 }
@@ -174,6 +185,7 @@ model User {
   tasksAssigned        Task[]                @relation("TaskAssignedTo")
   tasksCreated         Task[]                @relation("TaskCreatedBy")
   savedViews           SavedView[]           @relation("SavedViewCreatedBy")
+  notifications        Notification[]
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -528,4 +540,23 @@ model SavedView {
   @@index([tenantId])
   @@index([tenantId, entityType])
   @@map("saved_views")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  tenantId  String
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([userId, isRead])
+  @@map("notifications")
 }

@@ -4,8 +4,9 @@ import {
   BadRequestException,
   ConflictException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, NotificationType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateSubmissionDto } from './dto/create-submission.dto';
 import { UpdateSubmissionDto } from './dto/update-submission.dto';
 import { MoveStageDto } from './dto/move-stage.dto';
@@ -13,7 +14,10 @@ import { QuerySubmissionsDto } from './dto/query-submissions.dto';
 
 @Injectable()
 export class SubmissionsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   async findAll(tenantId: string, query: QuerySubmissionsDto) {
     const {
@@ -336,6 +340,20 @@ export class SubmissionsService {
           notes: dto.notes,
         },
       });
+
+      // Notify the submitter about the stage change
+      try {
+        await this.notificationsService.createNotification({
+          tenantId,
+          userId: updated.submittedBy.id,
+          type: NotificationType.STAGE_CHANGE,
+          title: 'Stage Changed',
+          message: `${updated.candidate.firstName} ${updated.candidate.lastName} moved to ${targetStage.name} for ${updated.job.title}`,
+          link: `/pipeline`,
+        });
+      } catch (err) {
+        console.error('[SubmissionsService] Failed to create notification:', err);
+      }
 
       return updated;
     });

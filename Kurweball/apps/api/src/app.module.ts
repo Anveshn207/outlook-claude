@@ -15,6 +15,8 @@ import { ReportsModule } from './modules/reports/reports.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { CustomFieldsModule } from './modules/custom-fields/custom-fields.module';
 import { SavedViewsModule } from './modules/saved-views/saved-views.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -37,6 +39,8 @@ import { SavedViewsModule } from './modules/saved-views/saved-views.module';
     TasksModule,
     CustomFieldsModule,
     SavedViewsModule,
+    NotificationsModule,
+    UsersModule,
   ],
 })
 export class AppModule {}

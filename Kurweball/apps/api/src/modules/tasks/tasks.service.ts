@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, TaskStatus } from '@prisma/client';
+import { Prisma, TaskStatus, NotificationType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { QueryTasksDto } from './dto/query-tasks.dto';
@@ -9,7 +10,10 @@ const userSelect = { id: true, firstName: true, lastName: true };
 
 @Injectable()
 export class TasksService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   async findAll(tenantId: string, query: QueryTasksDto) {
     const {
@@ -123,6 +127,22 @@ export class TasksService {
     console.log(
       `[TasksService] created task=${task.id} tenant=${tenantId} by=${userId}`,
     );
+
+    // Notify the assigned user about the new task
+    if (dto.assignedToId && dto.assignedToId !== userId) {
+      try {
+        await this.notificationsService.createNotification({
+          tenantId,
+          userId: dto.assignedToId,
+          type: NotificationType.TASK_ASSIGNED,
+          title: 'Task Assigned',
+          message: `You have been assigned: ${dto.title}`,
+          link: `/tasks`,
+        });
+      } catch (err) {
+        console.error('[TasksService] Failed to create notification:', err);
+      }
+    }
 
     return task;
   }
