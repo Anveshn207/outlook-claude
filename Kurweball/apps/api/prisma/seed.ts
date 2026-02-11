@@ -1540,8 +1540,118 @@ async function main() {
         displayOrder: 4,
       },
     }),
+    // Job custom fields
+    prisma.customField.create({
+      data: {
+        tenantId: tenant.id,
+        entityType: 'job',
+        fieldName: 'Remote Policy',
+        fieldKey: 'remote_policy',
+        fieldType: 'SELECT',
+        options: ['Fully Remote', 'Hybrid', 'On-site'],
+        isRequired: false,
+        isFilterable: true,
+        isVisibleInList: true,
+        displayOrder: 0,
+      },
+    }),
+    prisma.customField.create({
+      data: {
+        tenantId: tenant.id,
+        entityType: 'job',
+        fieldName: 'Clearance Required',
+        fieldKey: 'clearance_required',
+        fieldType: 'CHECKBOX',
+        isRequired: false,
+        isFilterable: true,
+        isVisibleInList: true,
+        displayOrder: 1,
+      },
+    }),
+    // Client custom fields
+    prisma.customField.create({
+      data: {
+        tenantId: tenant.id,
+        entityType: 'client',
+        fieldName: 'Payment Terms',
+        fieldKey: 'payment_terms',
+        fieldType: 'SELECT',
+        options: ['Net 15', 'Net 30', 'Net 45', 'Net 60'],
+        isRequired: false,
+        isFilterable: true,
+        isVisibleInList: true,
+        displayOrder: 0,
+      },
+    }),
+    prisma.customField.create({
+      data: {
+        tenantId: tenant.id,
+        entityType: 'client',
+        fieldName: 'Account Manager Email',
+        fieldKey: 'account_manager_email',
+        fieldType: 'EMAIL',
+        isRequired: false,
+        isFilterable: false,
+        isVisibleInList: false,
+        displayOrder: 1,
+      },
+    }),
   ]);
   console.log(`  Created ${customFields.length} custom fields`);
+
+  // ─── 13. Saved Views ────────────────────────────────────────────────────────
+  console.log('\nCreating saved views...');
+  const savedViews = await prisma.$transaction([
+    prisma.savedView.create({
+      data: {
+        tenantId: tenant.id,
+        entityType: 'candidate',
+        name: 'Active Candidates',
+        isDefault: true,
+        isShared: true,
+        config: {
+          filters: { status: 'ACTIVE' },
+          sortBy: 'createdAt',
+          sortOrder: 'desc',
+          visibleColumns: ['name', 'email', 'status', 'source', 'title', 'location', 'skills'],
+        },
+        createdById: admin.id,
+      },
+    }),
+    prisma.savedView.create({
+      data: {
+        tenantId: tenant.id,
+        entityType: 'job',
+        name: 'Open Hot Jobs',
+        isDefault: false,
+        isShared: true,
+        config: {
+          filters: { status: 'OPEN', priority: 'HOT' },
+          sortBy: 'createdAt',
+          sortOrder: 'desc',
+          visibleColumns: ['title', 'client', 'status', 'priority', 'location', 'positionsCount'],
+        },
+        createdById: recruiter1.id,
+      },
+    }),
+    prisma.savedView.create({
+      data: {
+        tenantId: tenant.id,
+        entityType: 'client',
+        name: 'Active Clients',
+        isDefault: true,
+        isShared: true,
+        config: {
+          filters: { status: 'ACTIVE' },
+          sortBy: 'name',
+          sortOrder: 'asc',
+          visibleColumns: ['name', 'industry', 'status', 'city', 'contacts', 'jobs'],
+        },
+        createdById: admin.id,
+      },
+    }),
+  ]);
+  console.log(`  Created ${savedViews.length} saved views`);
 
   // ─── Summary ────────────────────────────────────────────────────────────────
   console.log('\n========================================');
@@ -1559,6 +1669,7 @@ async function main() {
   console.log(`  Activities:  ${activities.length}`);
   console.log(`  Tasks:       ${tasks.length}`);
   console.log(`  Custom Fields: ${customFields.length}`);
+  console.log(`  Saved Views: ${savedViews.length}`);
   console.log('\nLogin credentials:');
   console.log('  admin@acme.com    / password123 (ADMIN)');
   console.log('  sarah@acme.com    / password123 (RECRUITER)');

@@ -13,6 +13,8 @@ import { SearchModule } from './modules/search/search.module';
 import { ActivitiesModule } from './modules/activities/activities.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { TasksModule } from './modules/tasks/tasks.module';
+import { CustomFieldsModule } from './modules/custom-fields/custom-fields.module';
+import { SavedViewsModule } from './modules/saved-views/saved-views.module';
 
 @Module({
   imports: [
@@ -33,6 +35,8 @@ import { TasksModule } from './modules/tasks/tasks.module';
     ActivitiesModule,
     ReportsModule,
     TasksModule,
+    CustomFieldsModule,
+    SavedViewsModule,
   ],
 })
 export class AppModule {}

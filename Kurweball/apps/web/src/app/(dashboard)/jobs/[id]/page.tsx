@@ -34,6 +34,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { apiFetch } from "@/lib/api";
+import { useCustomFields } from "@/hooks/use-custom-fields";
+import { CustomFieldDisplay } from "@/components/shared/custom-field-display";
 
 // --- Types ---
 
@@ -134,6 +136,7 @@ export default function JobDetailPage() {
   const [editPositionsCount, setEditPositionsCount] = useState("1");
   const [editBillRate, setEditBillRate] = useState("");
   const [editPayRate, setEditPayRate] = useState("");
+  const { fields: customFields } = useCustomFields("job");
 
   useEffect(() => {
     async function load() {
@@ -519,6 +522,26 @@ export default function JobDetailPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Custom Fields */}
+          {customFields.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Custom Fields</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                {customFields.map((cf) => (
+                  <div key={cf.id} className="flex items-center justify-between">
+                    <span className="text-muted-foreground">{cf.fieldName}</span>
+                    <CustomFieldDisplay
+                      field={cf}
+                      value={job.customData?.[cf.fieldKey]}
+                    />
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Right sidebar (1/3) */}

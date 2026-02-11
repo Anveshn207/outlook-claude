@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DataTable, Column } from "@/components/shared/data-table";
+import { CustomFieldInput } from "@/components/shared/custom-field-input";
+import { CustomFieldDisplay } from "@/components/shared/custom-field-display";
+import { useCustomFields } from "@/hooks/use-custom-fields";
 import { apiFetch } from "@/lib/api";
 
 interface Job {
@@ -34,6 +37,7 @@ interface Job {
   priority: string;
   location: string | null;
   positionsCount: number;
+  customData?: Record<string, unknown>;
   client: { id: string; name: string };
   _count: { submissions: number };
 }
@@ -68,6 +72,8 @@ export default function JobsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [customValues, setCustomValues] = useState<Record<string, unknown>>({});
+  const { fields: customFields } = useCustomFields("job");
   const [clients, setClients] = useState<ClientOption[]>([]);
 
   useEffect(() => {
@@ -106,6 +112,13 @@ export default function JobsPage() {
     setCreating(true);
     const form = new FormData(e.currentTarget);
     try {
+      const customData: Record<string, unknown> = {};
+      customFields.forEach((cf) => {
+        const val = customValues[cf.fieldKey];
+        if (val !== undefined && val !== null && val !== "") {
+          customData[cf.fieldKey] = val;
+        }
+      });
       await apiFetch("/jobs", {
         method: "POST",
         body: JSON.stringify({
@@ -116,9 +129,11 @@ export default function JobsPage() {
           jobType: form.get("jobType") || undefined,
           priority: form.get("priority") || undefined,
           positionsCount: Number(form.get("positionsCount")) || 1,
+          ...(Object.keys(customData).length > 0 && { customData }),
         }),
       });
       setShowCreate(false);
+      setCustomValues({});
       setRefreshKey((k) => k + 1);
     } catch (err) {
       console.error("[JobsPage] Create failed:", err);
@@ -127,77 +142,91 @@ export default function JobsPage() {
     }
   };
 
-  const columns: Column<Job>[] = [
-    {
-      key: "title",
-      header: "Title",
-      sortable: true,
-      render: (j) => (
-        <span className="font-medium text-foreground">{j.title}</span>
-      ),
-    },
-    {
-      key: "client",
-      header: "Client",
-      render: (j) => (
-        <span className="text-muted-foreground">{j.client.name}</span>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      sortable: true,
-      render: (j) => (
-        <Badge className={statusColors[j.status] ?? ""} variant="outline">
-          {j.status.replace("_", " ")}
-        </Badge>
-      ),
-    },
-    {
-      key: "jobType",
-      header: "Type",
-      render: (j) => (
-        <span className="text-muted-foreground">
-          {jobTypeLabels[j.jobType] ?? j.jobType}
-        </span>
-      ),
-    },
-    {
-      key: "priority",
-      header: "Priority",
-      sortable: true,
-      render: (j) => (
-        <Badge className={priorityColors[j.priority] ?? ""} variant="outline">
-          {j.priority}
-        </Badge>
-      ),
-    },
-    {
-      key: "location",
-      header: "Location",
-      render: (j) => (
-        <span className="text-muted-foreground">{j.location ?? "-"}</span>
-      ),
-    },
-    {
-      key: "positionsCount",
-      header: "Positions",
-      className: "text-right",
-      render: (j) => (
-        <span className="font-medium text-foreground">{j.positionsCount}</span>
-      ),
-    },
-    {
-      key: "submissions",
-      header: "Submissions",
-      className: "text-right",
-      render: (j) => (
-        <span className="font-medium text-foreground">
-          {j._count.submissions}
-        </span>
-      ),
-    },
-  ];
+  const columns: Column<Job>[] = useMemo(() => {
+    const base: Column<Job>[] = [
+      {
+        key: "title",
+        header: "Title",
+        sortable: true,
+        render: (j) => (
+          <span className="font-medium text-foreground">{j.title}</span>
+        ),
+      },
+      {
+        key: "client",
+        header: "Client",
+        render: (j) => (
+          <span className="text-muted-foreground">{j.client.name}</span>
+        ),
+      },
+      {
+        key: "status",
+        header: "Status",
+        sortable: true,
+        render: (j) => (
+          <Badge className={statusColors[j.status] ?? ""} variant="outline">
+            {j.status.replace("_", " ")}
+          </Badge>
+        ),
+      },
+      {
+        key: "jobType",
+        header: "Type",
+        render: (j) => (
+          <span className="text-muted-foreground">
+            {jobTypeLabels[j.jobType] ?? j.jobType}
+          </span>
+        ),
+      },
+      {
+        key: "priority",
+        header: "Priority",
+        sortable: true,
+        render: (j) => (
+          <Badge className={priorityColors[j.priority] ?? ""} variant="outline">
+            {j.priority}
+          </Badge>
+        ),
+      },
+      {
+        key: "location",
+        header: "Location",
+        render: (j) => (
+          <span className="text-muted-foreground">{j.location ?? "-"}</span>
+        ),
+      },
+      {
+        key: "positionsCount",
+        header: "Positions",
+        className: "text-right",
+        render: (j) => (
+          <span className="font-medium text-foreground">{j.positionsCount}</span>
+        ),
+      },
+      {
+        key: "submissions",
+        header: "Submissions",
+        className: "text-right",
+        render: (j) => (
+          <span className="font-medium text-foreground">
+            {j._count.submissions}
+          </span>
+        ),
+      },
+    ];
+
+    const dynamicCols: Column<Job>[] = customFields
+      .filter((cf) => cf.isVisibleInList)
+      .map((cf) => ({
+        key: `cf_${cf.fieldKey}`,
+        header: cf.fieldName,
+        render: (j: Job) => (
+          <CustomFieldDisplay field={cf} value={j.customData?.[cf.fieldKey]} />
+        ),
+      }));
+
+    return [...base, ...dynamicCols];
+  }, [customFields]);
 
   return (
     <div className="space-y-6">
@@ -314,6 +343,23 @@ export default function JobsPage() {
                 <Label htmlFor="description">Description</Label>
                 <Textarea id="description" name="description" rows={3} />
               </div>
+              {customFields.length > 0 && (
+                <div className="border-t border-border pt-4">
+                  <p className="mb-3 text-xs font-medium uppercase text-muted-foreground">Custom Fields</p>
+                  <div className="grid gap-4">
+                    {customFields.map((cf) => (
+                      <CustomFieldInput
+                        key={cf.id}
+                        field={cf}
+                        value={customValues[cf.fieldKey]}
+                        onChange={(key, val) =>
+                          setCustomValues((prev) => ({ ...prev, [key]: val }))
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button

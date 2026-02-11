@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DataTable, Column } from "@/components/shared/data-table";
+import { CustomFieldInput } from "@/components/shared/custom-field-input";
+import { CustomFieldDisplay } from "@/components/shared/custom-field-display";
+import { useCustomFields } from "@/hooks/use-custom-fields";
 import { apiFetch } from "@/lib/api";
 
 interface Client {
@@ -33,6 +36,7 @@ interface Client {
   city: string | null;
   state: string | null;
   website: string | null;
+  customData?: Record<string, unknown>;
   _count: { contacts: number; jobs: number };
 }
 
@@ -48,6 +52,8 @@ export default function ClientsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [customValues, setCustomValues] = useState<Record<string, unknown>>({});
+  const { fields: customFields } = useCustomFields("client");
 
   const fetchClients = useCallback(
     async (params: {
@@ -80,6 +86,13 @@ export default function ClientsPage() {
     setCreating(true);
     const form = new FormData(e.currentTarget);
     try {
+      const customData: Record<string, unknown> = {};
+      customFields.forEach((cf) => {
+        const val = customValues[cf.fieldKey];
+        if (val !== undefined && val !== null && val !== "") {
+          customData[cf.fieldKey] = val;
+        }
+      });
       await apiFetch("/clients", {
         method: "POST",
         body: JSON.stringify({
@@ -90,9 +103,11 @@ export default function ClientsPage() {
           state: form.get("state") || undefined,
           country: form.get("country") || undefined,
           status: form.get("status") || undefined,
+          ...(Object.keys(customData).length > 0 && { customData }),
         }),
       });
       setShowCreate(false);
+      setCustomValues({});
       setRefreshKey((k) => k + 1);
     } catch (err) {
       console.error("[ClientsPage] Create failed:", err);
@@ -101,60 +116,74 @@ export default function ClientsPage() {
     }
   };
 
-  const columns: Column<Client>[] = [
-    {
-      key: "name",
-      header: "Name",
-      sortable: true,
-      render: (c) => (
-        <span className="font-medium text-foreground">{c.name}</span>
-      ),
-    },
-    {
-      key: "industry",
-      header: "Industry",
-      render: (c) => (
-        <span className="text-muted-foreground">{c.industry ?? "-"}</span>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      sortable: true,
-      render: (c) => (
-        <Badge className={statusColors[c.status] ?? ""} variant="outline">
-          {c.status}
-        </Badge>
-      ),
-    },
-    {
-      key: "city",
-      header: "Location",
-      render: (c) => (
-        <span className="text-muted-foreground">
-          {[c.city, c.state].filter(Boolean).join(", ") || "-"}
-        </span>
-      ),
-    },
-    {
-      key: "contacts",
-      header: "Contacts",
-      className: "text-right",
-      render: (c) => (
-        <span className="font-medium text-foreground">
-          {c._count.contacts}
-        </span>
-      ),
-    },
-    {
-      key: "jobs",
-      header: "Jobs",
-      className: "text-right",
-      render: (c) => (
-        <span className="font-medium text-foreground">{c._count.jobs}</span>
-      ),
-    },
-  ];
+  const columns: Column<Client>[] = useMemo(() => {
+    const base: Column<Client>[] = [
+      {
+        key: "name",
+        header: "Name",
+        sortable: true,
+        render: (c) => (
+          <span className="font-medium text-foreground">{c.name}</span>
+        ),
+      },
+      {
+        key: "industry",
+        header: "Industry",
+        render: (c) => (
+          <span className="text-muted-foreground">{c.industry ?? "-"}</span>
+        ),
+      },
+      {
+        key: "status",
+        header: "Status",
+        sortable: true,
+        render: (c) => (
+          <Badge className={statusColors[c.status] ?? ""} variant="outline">
+            {c.status}
+          </Badge>
+        ),
+      },
+      {
+        key: "city",
+        header: "Location",
+        render: (c) => (
+          <span className="text-muted-foreground">
+            {[c.city, c.state].filter(Boolean).join(", ") || "-"}
+          </span>
+        ),
+      },
+      {
+        key: "contacts",
+        header: "Contacts",
+        className: "text-right",
+        render: (c) => (
+          <span className="font-medium text-foreground">
+            {c._count.contacts}
+          </span>
+        ),
+      },
+      {
+        key: "jobs",
+        header: "Jobs",
+        className: "text-right",
+        render: (c) => (
+          <span className="font-medium text-foreground">{c._count.jobs}</span>
+        ),
+      },
+    ];
+
+    const dynamicCols: Column<Client>[] = customFields
+      .filter((cf) => cf.isVisibleInList)
+      .map((cf) => ({
+        key: `cf_${cf.fieldKey}`,
+        header: cf.fieldName,
+        render: (c: Client) => (
+          <CustomFieldDisplay field={cf} value={c.customData?.[cf.fieldKey]} />
+        ),
+      }));
+
+    return [...base, ...dynamicCols];
+  }, [customFields]);
 
   return (
     <div className="space-y-6">
@@ -244,6 +273,23 @@ export default function ClientsPage() {
                   <option value="INACTIVE">Inactive</option>
                 </select>
               </div>
+              {customFields.length > 0 && (
+                <div className="border-t border-border pt-4">
+                  <p className="mb-3 text-xs font-medium uppercase text-muted-foreground">Custom Fields</p>
+                  <div className="grid gap-4">
+                    {customFields.map((cf) => (
+                      <CustomFieldInput
+                        key={cf.id}
+                        field={cf}
+                        value={customValues[cf.fieldKey]}
+                        onChange={(key, val) =>
+                          setCustomValues((prev) => ({ ...prev, [key]: val }))
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button

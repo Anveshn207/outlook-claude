@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DataTable, Column } from "@/components/shared/data-table";
+import { CustomFieldInput } from "@/components/shared/custom-field-input";
+import { CustomFieldDisplay } from "@/components/shared/custom-field-display";
+import { useCustomFields } from "@/hooks/use-custom-fields";
 import { apiFetch } from "@/lib/api";
 
 interface Candidate {
@@ -37,6 +40,7 @@ interface Candidate {
   currentEmployer: string | null;
   location: string | null;
   skills: string[];
+  customData?: Record<string, unknown>;
   createdBy: { id: string; firstName: string; lastName: string };
 }
 
@@ -61,6 +65,8 @@ export default function CandidatesPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [customValues, setCustomValues] = useState<Record<string, unknown>>({});
+  const { fields: customFields } = useCustomFields("candidate");
 
   const fetchCandidates = useCallback(
     async (params: {
@@ -93,6 +99,13 @@ export default function CandidatesPage() {
     setCreating(true);
     const form = new FormData(e.currentTarget);
     try {
+      const customData: Record<string, unknown> = {};
+      customFields.forEach((cf) => {
+        const val = customValues[cf.fieldKey];
+        if (val !== undefined && val !== null && val !== "") {
+          customData[cf.fieldKey] = val;
+        }
+      });
       await apiFetch("/candidates", {
         method: "POST",
         body: JSON.stringify({
@@ -103,9 +116,11 @@ export default function CandidatesPage() {
           title: form.get("title") || undefined,
           location: form.get("location") || undefined,
           source: form.get("source") || undefined,
+          ...(Object.keys(customData).length > 0 && { customData }),
         }),
       });
       setShowCreate(false);
+      setCustomValues({});
       setRefreshKey((k) => k + 1);
     } catch (err) {
       console.error("[CandidatesPage] Create failed:", err);
@@ -114,76 +129,90 @@ export default function CandidatesPage() {
     }
   };
 
-  const columns: Column<Candidate>[] = [
-    {
-      key: "name",
-      header: "Name",
-      sortable: true,
-      render: (c) => (
-        <span className="font-medium text-foreground">
-          {c.firstName} {c.lastName}
-        </span>
-      ),
-    },
-    {
-      key: "email",
-      header: "Email",
-      render: (c) => (
-        <span className="text-muted-foreground">{c.email ?? "-"}</span>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      sortable: true,
-      render: (c) => (
-        <Badge className={statusColors[c.status] ?? ""} variant="outline">
-          {c.status}
-        </Badge>
-      ),
-    },
-    {
-      key: "source",
-      header: "Source",
-      render: (c) => (
-        <span className="text-muted-foreground">
-          {sourceLabels[c.source] ?? c.source}
-        </span>
-      ),
-    },
-    {
-      key: "title",
-      header: "Title",
-      render: (c) => (
-        <span className="text-muted-foreground">{c.title ?? "-"}</span>
-      ),
-    },
-    {
-      key: "location",
-      header: "Location",
-      render: (c) => (
-        <span className="text-muted-foreground">{c.location ?? "-"}</span>
-      ),
-    },
-    {
-      key: "skills",
-      header: "Skills",
-      render: (c) => (
-        <div className="flex flex-wrap gap-1">
-          {c.skills.slice(0, 3).map((skill) => (
-            <Badge key={skill} variant="secondary" className="text-xs">
-              {skill}
-            </Badge>
-          ))}
-          {c.skills.length > 3 && (
-            <Badge variant="secondary" className="text-xs">
-              +{c.skills.length - 3}
-            </Badge>
-          )}
-        </div>
-      ),
-    },
-  ];
+  const columns: Column<Candidate>[] = useMemo(() => {
+    const base: Column<Candidate>[] = [
+      {
+        key: "name",
+        header: "Name",
+        sortable: true,
+        render: (c) => (
+          <span className="font-medium text-foreground">
+            {c.firstName} {c.lastName}
+          </span>
+        ),
+      },
+      {
+        key: "email",
+        header: "Email",
+        render: (c) => (
+          <span className="text-muted-foreground">{c.email ?? "-"}</span>
+        ),
+      },
+      {
+        key: "status",
+        header: "Status",
+        sortable: true,
+        render: (c) => (
+          <Badge className={statusColors[c.status] ?? ""} variant="outline">
+            {c.status}
+          </Badge>
+        ),
+      },
+      {
+        key: "source",
+        header: "Source",
+        render: (c) => (
+          <span className="text-muted-foreground">
+            {sourceLabels[c.source] ?? c.source}
+          </span>
+        ),
+      },
+      {
+        key: "title",
+        header: "Title",
+        render: (c) => (
+          <span className="text-muted-foreground">{c.title ?? "-"}</span>
+        ),
+      },
+      {
+        key: "location",
+        header: "Location",
+        render: (c) => (
+          <span className="text-muted-foreground">{c.location ?? "-"}</span>
+        ),
+      },
+      {
+        key: "skills",
+        header: "Skills",
+        render: (c) => (
+          <div className="flex flex-wrap gap-1">
+            {c.skills.slice(0, 3).map((skill) => (
+              <Badge key={skill} variant="secondary" className="text-xs">
+                {skill}
+              </Badge>
+            ))}
+            {c.skills.length > 3 && (
+              <Badge variant="secondary" className="text-xs">
+                +{c.skills.length - 3}
+              </Badge>
+            )}
+          </div>
+        ),
+      },
+    ];
+
+    const dynamicCols: Column<Candidate>[] = customFields
+      .filter((cf) => cf.isVisibleInList)
+      .map((cf) => ({
+        key: `cf_${cf.fieldKey}`,
+        header: cf.fieldName,
+        render: (c: Candidate) => (
+          <CustomFieldDisplay field={cf} value={c.customData?.[cf.fieldKey]} />
+        ),
+      }));
+
+    return [...base, ...dynamicCols];
+  }, [customFields]);
 
   return (
     <div className="space-y-6">
@@ -278,6 +307,23 @@ export default function CandidatesPage() {
                   <option value="DIRECT">Direct</option>
                 </select>
               </div>
+              {customFields.length > 0 && (
+                <div className="border-t border-border pt-4">
+                  <p className="mb-3 text-xs font-medium uppercase text-muted-foreground">Custom Fields</p>
+                  <div className="grid gap-4">
+                    {customFields.map((cf) => (
+                      <CustomFieldInput
+                        key={cf.id}
+                        field={cf}
+                        value={customValues[cf.fieldKey]}
+                        onChange={(key, val) =>
+                          setCustomValues((prev) => ({ ...prev, [key]: val }))
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button

@@ -40,6 +40,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiFetch } from "@/lib/api";
+import { useCustomFields } from "@/hooks/use-custom-fields";
+import { CustomFieldDisplay } from "@/components/shared/custom-field-display";
 
 // --- Types ---
 
@@ -113,6 +115,7 @@ export default function ClientDetailPage() {
   const [loading, setLoading] = useState(true);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [contactSubmitting, setContactSubmitting] = useState(false);
+  const { fields: customFields } = useCustomFields("client");
 
   // Add Contact form state
   const [contactForm, setContactForm] = useState({
@@ -404,6 +407,26 @@ export default function ClientDetailPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Custom Fields */}
+          {customFields.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Custom Fields</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                {customFields.map((cf) => (
+                  <div key={cf.id} className="flex items-center justify-between">
+                    <span className="text-muted-foreground">{cf.fieldName}</span>
+                    <CustomFieldDisplay
+                      field={cf}
+                      value={client.customData?.[cf.fieldKey]}
+                    />
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Right column (1/3) — Info sidebar */}

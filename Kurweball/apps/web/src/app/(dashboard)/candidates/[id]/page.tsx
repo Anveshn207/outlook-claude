@@ -24,6 +24,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
+import { useCustomFields } from "@/hooks/use-custom-fields";
+import { CustomFieldDisplay } from "@/components/shared/custom-field-display";
 
 interface CandidateDetail {
   id: string;
@@ -45,6 +47,7 @@ interface CandidateDetail {
   tags: string[];
   createdAt: string;
   createdBy: { id: string; firstName: string; lastName: string };
+  customData: Record<string, unknown> | null;
   submissions: SubmissionRow[];
   resumes: ResumeRow[];
 }
@@ -121,6 +124,7 @@ export default function CandidateProfilePage() {
   const [activeTab, setActiveTab] = useState("overview");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { fields: customFields } = useCustomFields("candidate");
 
   useEffect(() => {
     async function load() {
@@ -407,6 +411,26 @@ export default function CandidateProfilePage() {
                 )}
             </CardContent>
           </Card>
+
+          {/* Custom Fields */}
+          {customFields.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Custom Fields</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                {customFields.map((cf) => (
+                  <div key={cf.id} className="flex items-center justify-between">
+                    <span className="text-muted-foreground">{cf.fieldName}</span>
+                    <CustomFieldDisplay
+                      field={cf}
+                      value={candidate.customData?.[cf.fieldKey]}
+                    />
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Resumes */}
           <Card className="lg:col-span-2">
