@@ -1,0 +1,31 @@
+{
+  "name": "outlook-claude",
+  "version": "1.0.0",
+  "description": "Microsoft Graph API integration for Claude Code - MCP server, library, and skill",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "build": "tsc",
+    "start": "node dist/mcp-server.js",
+    "dev": "tsx src/mcp-server.ts",
+    "auth": "tsx src/auth-setup.ts",
+    "uia": "tsx src/uia-mcp-server.ts"
+  },
+  "dependencies": {
+    "@azure/msal-node": "^2.16.0",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "dotenv": "^17.2.4",
+    "isomorphic-fetch": "^3.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@types/node": "^22.0.0",
+    "eslint": "^9.39.2",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.55.0"
+  }
+}

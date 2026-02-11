@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+token-cache.json
+.mcp.json
+nul
+*.png
+*.json.bak

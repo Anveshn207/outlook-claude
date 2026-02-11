@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc:*)",
+      "Bash(az:*)",
+      "Bash(winget install:*)",
+      "Bash(npx tsx:*)",
+      "Bash(export PATH=\"$PATH:/c/Program Files/Microsoft SDKs/Azure/CLI2/wbin\")",
+      "Bash(node -e:*)",
+      "Bash(powershell.exe -NoProfile -Command 'Add-Type -AssemblyName UIAutomationClient; Add-Type -AssemblyName UIAutomationTypes; $root = [System.Windows.Automation.AutomationElement]::RootElement; $cond = [System.Windows.Automation.Condition]::TrueCondition; $children = $root.FindAll\\([System.Windows.Automation.TreeScope]::Children, $cond\\); foreach \\($c in $children\\) { $cur = $c.Current; Write-Output \"\"$\\($cur.ProcessId\\) | $\\($cur.Name\\) | $\\($cur.ClassName\\)\"\" }')",
+      "Bash(powershell.exe -NoProfile -Command 'Add-Type -AssemblyName UIAutomationClient; Add-Type -AssemblyName UIAutomationTypes; $root = [System.Windows.Automation.AutomationElement]::RootElement; $cond = [System.Windows.Automation.Condition]::TrueCondition; $children = $root.FindAll\\([System.Windows.Automation.TreeScope]::Children, $cond\\); $results = @\\(\\); foreach \\($c in $children\\) { $cur = $c.Current; $results += @{ pid=$cur.ProcessId; name=$cur.Name; class=$cur.ClassName } }; $results | ConvertTo-Json')",
+      "Bash(powershell.exe -NoProfile -Command 'Add-Type -AssemblyName UIAutomationClient; Add-Type -AssemblyName UIAutomationTypes; $notepad = [System.Windows.Automation.AutomationElement]::RootElement; $props = [System.Windows.Automation.AutomationElement+AutomationElementInformation].GetProperties\\(\\) | ForEach-Object { $_.Name }; $props | ConvertTo-Json')",
+      "Bash(powershell.exe -NoProfile -Command '[System.Windows.Automation.ControlType].GetFields\\(\"\"Public,Static\"\"\\) | ForEach-Object { $_.Name }')",
+      "Bash(powershell.exe -NoProfile -Command 'Add-Type -AssemblyName UIAutomationClient; Add-Type -AssemblyName UIAutomationTypes; [System.Windows.Automation.ControlType].GetFields\\(\"\"Public,Static\"\"\\) | ForEach-Object { $_.Name }')",
+      "Bash(powershell.exe:*)",
+      "Bash(node --version:*)",
+      "Bash(git --version)",
+      "Bash(claude --version:*)",
+      "Bash(claude mcp add:*)"
+    ]
+  }
+}
