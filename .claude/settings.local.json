@@ -16,7 +16,9 @@
       "Bash(node --version:*)",
       "Bash(git --version)",
       "Bash(claude --version:*)",
-      "Bash(claude mcp add:*)"
+      "Bash(claude mcp add:*)",
+      "Bash(export PATH=\"$PATH:/c/Program Files/GitHub CLI\")",
+      "Bash(powershell -NoProfile -File - <<'PSEOF'\n$pdf = \"C:\\\\Users\\\\E2 Training\\\\Downloads\\\\Sathvika Bachireddy DL copy.pdf\"\n$bytes = [System.IO.File]::ReadAllBytes\\($pdf\\)\n$text = [System.Text.Encoding]::ASCII.GetString\\($bytes\\)\n$patterns = @\\('Producer', 'Creator', 'ModDate', 'CreationDate', 'Author', 'Adobe', 'Photoshop', 'GIMP', 'Canva', 'edit', 'modify'\\)\nforeach \\($p in $patterns\\) {\n    $matches = [regex]::Matches\\($text, \"\\(?i\\)$p[^\\\\r\\\\n]{0,100}\"\\)\n    foreach \\($m in $matches\\) {\n        Write-Output $m.Value\n    }\n}\nPSEOF)"
     ]
   }
 }

@@ -1,0 +1,26 @@
+{
+  "name": "kurweball",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Unified recruiting platform — ATS + CRM + custom fields",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "db:migrate": "npm run db:migrate -w @kurweball/api",
+    "db:seed": "npm run db:seed -w @kurweball/api",
+    "db:studio": "npm run db:studio -w @kurweball/api"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "typescript": "^5.7.0"
+  },
+  "packageManager": "npm@10.9.2",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

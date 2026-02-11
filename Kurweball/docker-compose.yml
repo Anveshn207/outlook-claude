@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: kurweball-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kurweball
+      POSTGRES_PASSWORD: kurweball_dev
+      POSTGRES_DB: kurweball
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: kurweball-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+
+  opensearch:
+    image: opensearchproject/opensearch:2.18.0
+    container_name: kurweball-search
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - plugins.security.disabled=true
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - osdata:/usr/share/opensearch/data
+
+volumes:
+  pgdata:
+  redisdata:
+  osdata:

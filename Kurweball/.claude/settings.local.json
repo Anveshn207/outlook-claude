@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell.exe -NoProfile -Command \"wsl --status\")",
+      "Bash(powershell.exe -NoProfile -Command \"wsl --install --no-distribution\")",
+      "Bash(wsl.exe --install:*)",
+      "Bash(winget.exe install:*)",
+      "Bash(export PATH=\"/c/Program Files/PostgreSQL/16/bin:$PATH\")",
+      "Bash(PGPASSWORD=postgres psql:*)"
+    ]
+  }
+}
