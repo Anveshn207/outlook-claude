@@ -1,80 +1,161 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-
-type ClientStatus = "Active" | "Prospect" | "Inactive";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { DataTable, Column } from "@/components/shared/data-table";
+import { apiFetch } from "@/lib/api";
 
 interface Client {
   id: string;
   name: string;
-  industry: string;
-  status: ClientStatus;
-  city: string;
-  contactCount: number;
-  jobsCount: number;
+  industry: string | null;
+  status: string;
+  city: string | null;
+  state: string | null;
+  website: string | null;
+  _count: { contacts: number; jobs: number };
 }
 
-const statusColors: Record<ClientStatus, string> = {
-  Active: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  Prospect: "bg-amber-100 text-amber-700 border-amber-200",
-  Inactive: "bg-gray-100 text-gray-600 border-gray-200",
+const statusColors: Record<string, string> = {
+  ACTIVE: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  PROSPECT: "bg-amber-100 text-amber-700 border-amber-200",
+  INACTIVE: "bg-gray-100 text-gray-600 border-gray-200",
 };
 
-const clients: Client[] = [
-  {
-    id: "1",
-    name: "Acme Corp",
-    industry: "Technology",
-    status: "Active",
-    city: "San Francisco",
-    contactCount: 5,
-    jobsCount: 8,
-  },
-  {
-    id: "2",
-    name: "TechFlow Inc",
-    industry: "SaaS",
-    status: "Active",
-    city: "New York",
-    contactCount: 3,
-    jobsCount: 4,
-  },
-  {
-    id: "3",
-    name: "CloudBase",
-    industry: "Cloud Infrastructure",
-    status: "Active",
-    city: "Austin",
-    contactCount: 2,
-    jobsCount: 6,
-  },
-  {
-    id: "4",
-    name: "NovaSoft",
-    industry: "Enterprise Software",
-    status: "Prospect",
-    city: "Seattle",
-    contactCount: 1,
-    jobsCount: 2,
-  },
-  {
-    id: "5",
-    name: "DataPrime",
-    industry: "Data Analytics",
-    status: "Inactive",
-    city: "Chicago",
-    contactCount: 4,
-    jobsCount: 0,
-  },
-];
-
 export default function ClientsPage() {
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [showCreate, setShowCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const fetchClients = useCallback(
+    async (params: {
+      page: number;
+      limit: number;
+      search?: string;
+      sortBy?: string;
+      sortOrder?: "asc" | "desc";
+    }) => {
+      const query = new URLSearchParams();
+      query.set("page", String(params.page));
+      query.set("limit", String(params.limit));
+      if (params.search) query.set("search", params.search);
+      if (params.sortBy) query.set("sortBy", params.sortBy);
+      if (params.sortOrder) query.set("sortOrder", params.sortOrder);
+      if (statusFilter && statusFilter !== "all")
+        query.set("status", statusFilter);
+
+      const res = await apiFetch<{
+        data: Client[];
+        meta: { total: number };
+      }>(`/clients?${query}`);
+      return { data: res.data, total: res.meta.total };
+    },
+    [statusFilter],
+  );
+
+  const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setCreating(true);
+    const form = new FormData(e.currentTarget);
+    try {
+      await apiFetch("/clients", {
+        method: "POST",
+        body: JSON.stringify({
+          name: form.get("name"),
+          industry: form.get("industry") || undefined,
+          website: form.get("website") || undefined,
+          city: form.get("city") || undefined,
+          state: form.get("state") || undefined,
+          country: form.get("country") || undefined,
+          status: form.get("status") || undefined,
+        }),
+      });
+      setShowCreate(false);
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      console.error("[ClientsPage] Create failed:", err);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const columns: Column<Client>[] = [
+    {
+      key: "name",
+      header: "Name",
+      sortable: true,
+      render: (c) => (
+        <span className="font-medium text-foreground">{c.name}</span>
+      ),
+    },
+    {
+      key: "industry",
+      header: "Industry",
+      render: (c) => (
+        <span className="text-muted-foreground">{c.industry ?? "-"}</span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      sortable: true,
+      render: (c) => (
+        <Badge className={statusColors[c.status] ?? ""} variant="outline">
+          {c.status}
+        </Badge>
+      ),
+    },
+    {
+      key: "city",
+      header: "Location",
+      render: (c) => (
+        <span className="text-muted-foreground">
+          {[c.city, c.state].filter(Boolean).join(", ") || "-"}
+        </span>
+      ),
+    },
+    {
+      key: "contacts",
+      header: "Contacts",
+      className: "text-right",
+      render: (c) => (
+        <span className="font-medium text-foreground">
+          {c._count.contacts}
+        </span>
+      ),
+    },
+    {
+      key: "jobs",
+      header: "Jobs",
+      className: "text-right",
+      render: (c) => (
+        <span className="font-medium text-foreground">{c._count.jobs}</span>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Clients</h2>
@@ -82,75 +163,100 @@ export default function ClientsPage() {
             Manage your client relationships and track engagement.
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setShowCreate(true)}>
           <Plus className="h-4 w-4" />
           Add Client
         </Button>
       </div>
 
-      {/* Table */}
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Name
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Industry
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    City
-                  </th>
-                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                    Contacts
-                  </th>
-                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                    Jobs
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {clients.map((client) => (
-                  <tr
-                    key={client.id}
-                    className="border-b border-border transition-colors last:border-b-0 hover:bg-muted/30"
-                  >
-                    <td className="px-4 py-3 font-medium text-foreground">
-                      {client.name}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {client.industry}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge
-                        className={statusColors[client.status]}
-                        variant="outline"
-                      >
-                        {client.status}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {client.city}
-                    </td>
-                    <td className="px-4 py-3 text-right font-medium text-foreground">
-                      {client.contactCount}
-                    </td>
-                    <td className="px-4 py-3 text-right font-medium text-foreground">
-                      {client.jobsCount}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+      <DataTable
+        key={refreshKey}
+        columns={columns}
+        fetchData={fetchClients}
+        searchPlaceholder="Search clients..."
+        keyExtractor={(c) => c.id}
+        emptyMessage="No clients found. Add your first client to get started."
+        toolbar={
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="ACTIVE">Active</SelectItem>
+              <SelectItem value="PROSPECT">Prospect</SelectItem>
+              <SelectItem value="INACTIVE">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
+        }
+      />
+
+      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add Client</DialogTitle>
+            <DialogDescription>
+              Create a new client record.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreate}>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Company Name *</Label>
+                <Input id="name" name="name" required />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="industry">Industry</Label>
+                  <Input id="industry" name="industry" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="website">Website</Label>
+                  <Input id="website" name="website" placeholder="https://" />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="city">City</Label>
+                  <Input id="city" name="city" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="state">State</Label>
+                  <Input id="state" name="state" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="country">Country</Label>
+                  <Input id="country" name="country" defaultValue="US" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <select
+                  id="status"
+                  name="status"
+                  className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
+                >
+                  <option value="ACTIVE">Active</option>
+                  <option value="PROSPECT">Prospect</option>
+                  <option value="INACTIVE">Inactive</option>
+                </select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowCreate(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={creating}>
+                {creating ? "Creating..." : "Create Client"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

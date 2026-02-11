@@ -1,126 +1,192 @@
 "use client";
 
+import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-
-type CandidateStatus = "Active" | "Passive" | "Placed" | "DND";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { DataTable, Column } from "@/components/shared/data-table";
+import { apiFetch } from "@/lib/api";
 
 interface Candidate {
   id: string;
-  name: string;
-  email: string;
-  status: CandidateStatus;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  phone: string | null;
   source: string;
-  location: string;
+  status: string;
+  title: string | null;
+  currentEmployer: string | null;
+  location: string | null;
   skills: string[];
+  createdBy: { id: string; firstName: string; lastName: string };
 }
 
-const statusColors: Record<CandidateStatus, string> = {
-  Active: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  Passive: "bg-amber-100 text-amber-700 border-amber-200",
-  Placed: "bg-blue-100 text-blue-700 border-blue-200",
+const statusColors: Record<string, string> = {
+  ACTIVE: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  PASSIVE: "bg-amber-100 text-amber-700 border-amber-200",
+  PLACED: "bg-blue-100 text-blue-700 border-blue-200",
   DND: "bg-red-100 text-red-700 border-red-200",
 };
 
-const candidates: Candidate[] = [
-  {
-    id: "1",
-    name: "Sarah Chen",
-    email: "sarah.chen@email.com",
-    status: "Active",
-    source: "LinkedIn",
-    location: "San Francisco, CA",
-    skills: ["React", "TypeScript", "Node.js"],
-  },
-  {
-    id: "2",
-    name: "James Wilson",
-    email: "james.w@email.com",
-    status: "Active",
-    source: "Referral",
-    location: "New York, NY",
-    skills: ["Java", "Spring Boot", "AWS"],
-  },
-  {
-    id: "3",
-    name: "Maria Garcia",
-    email: "m.garcia@email.com",
-    status: "Passive",
-    source: "Indeed",
-    location: "Austin, TX",
-    skills: ["Python", "Django", "PostgreSQL"],
-  },
-  {
-    id: "4",
-    name: "David Park",
-    email: "david.park@email.com",
-    status: "Placed",
-    source: "LinkedIn",
-    location: "Seattle, WA",
-    skills: ["Go", "Kubernetes", "Docker"],
-  },
-  {
-    id: "5",
-    name: "Emily Johnson",
-    email: "emily.j@email.com",
-    status: "Active",
-    source: "Career Fair",
-    location: "Chicago, IL",
-    skills: ["React", "Next.js", "Tailwind"],
-  },
-  {
-    id: "6",
-    name: "Michael Brown",
-    email: "m.brown@email.com",
-    status: "DND",
-    source: "LinkedIn",
-    location: "Denver, CO",
-    skills: ["C#", ".NET", "Azure"],
-  },
-  {
-    id: "7",
-    name: "Lisa Zhang",
-    email: "lisa.z@email.com",
-    status: "Active",
-    source: "Referral",
-    location: "Los Angeles, CA",
-    skills: ["Python", "ML", "TensorFlow"],
-  },
-  {
-    id: "8",
-    name: "Robert Taylor",
-    email: "r.taylor@email.com",
-    status: "Passive",
-    source: "Job Board",
-    location: "Boston, MA",
-    skills: ["Java", "Microservices", "Kafka"],
-  },
-  {
-    id: "9",
-    name: "Amanda Lee",
-    email: "amanda.lee@email.com",
-    status: "Active",
-    source: "LinkedIn",
-    location: "Portland, OR",
-    skills: ["Ruby", "Rails", "PostgreSQL"],
-  },
-  {
-    id: "10",
-    name: "Chris Martinez",
-    email: "chris.m@email.com",
-    status: "Active",
-    source: "Indeed",
-    location: "Miami, FL",
-    skills: ["TypeScript", "Angular", "Firebase"],
-  },
-];
+const sourceLabels: Record<string, string> = {
+  REFERRAL: "Referral",
+  LINKEDIN: "LinkedIn",
+  JOBBOARD: "Job Board",
+  DIRECT: "Direct",
+  OTHER: "Other",
+};
 
 export default function CandidatesPage() {
+  const router = useRouter();
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [showCreate, setShowCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const fetchCandidates = useCallback(
+    async (params: {
+      page: number;
+      limit: number;
+      search?: string;
+      sortBy?: string;
+      sortOrder?: "asc" | "desc";
+    }) => {
+      const query = new URLSearchParams();
+      query.set("page", String(params.page));
+      query.set("limit", String(params.limit));
+      if (params.search) query.set("search", params.search);
+      if (params.sortBy) query.set("sortBy", params.sortBy);
+      if (params.sortOrder) query.set("sortOrder", params.sortOrder);
+      if (statusFilter && statusFilter !== "all")
+        query.set("status", statusFilter);
+
+      const res = await apiFetch<{
+        data: Candidate[];
+        meta: { total: number };
+      }>(`/candidates?${query}`);
+      return { data: res.data, total: res.meta.total };
+    },
+    [statusFilter],
+  );
+
+  const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setCreating(true);
+    const form = new FormData(e.currentTarget);
+    try {
+      await apiFetch("/candidates", {
+        method: "POST",
+        body: JSON.stringify({
+          firstName: form.get("firstName"),
+          lastName: form.get("lastName"),
+          email: form.get("email") || undefined,
+          phone: form.get("phone") || undefined,
+          title: form.get("title") || undefined,
+          location: form.get("location") || undefined,
+          source: form.get("source") || undefined,
+        }),
+      });
+      setShowCreate(false);
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      console.error("[CandidatesPage] Create failed:", err);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const columns: Column<Candidate>[] = [
+    {
+      key: "name",
+      header: "Name",
+      sortable: true,
+      render: (c) => (
+        <span className="font-medium text-foreground">
+          {c.firstName} {c.lastName}
+        </span>
+      ),
+    },
+    {
+      key: "email",
+      header: "Email",
+      render: (c) => (
+        <span className="text-muted-foreground">{c.email ?? "-"}</span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      sortable: true,
+      render: (c) => (
+        <Badge className={statusColors[c.status] ?? ""} variant="outline">
+          {c.status}
+        </Badge>
+      ),
+    },
+    {
+      key: "source",
+      header: "Source",
+      render: (c) => (
+        <span className="text-muted-foreground">
+          {sourceLabels[c.source] ?? c.source}
+        </span>
+      ),
+    },
+    {
+      key: "title",
+      header: "Title",
+      render: (c) => (
+        <span className="text-muted-foreground">{c.title ?? "-"}</span>
+      ),
+    },
+    {
+      key: "location",
+      header: "Location",
+      render: (c) => (
+        <span className="text-muted-foreground">{c.location ?? "-"}</span>
+      ),
+    },
+    {
+      key: "skills",
+      header: "Skills",
+      render: (c) => (
+        <div className="flex flex-wrap gap-1">
+          {c.skills.slice(0, 3).map((skill) => (
+            <Badge key={skill} variant="secondary" className="text-xs">
+              {skill}
+            </Badge>
+          ))}
+          {c.skills.length > 3 && (
+            <Badge variant="secondary" className="text-xs">
+              +{c.skills.length - 3}
+            </Badge>
+          )}
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Candidates</h2>
@@ -128,85 +194,106 @@ export default function CandidatesPage() {
             Manage your candidate pool and track their status.
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setShowCreate(true)}>
           <Plus className="h-4 w-4" />
           Add Candidate
         </Button>
       </div>
 
-      {/* Table */}
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Name
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Email
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Source
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Location
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Skills
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {candidates.map((candidate) => (
-                  <tr
-                    key={candidate.id}
-                    className="border-b border-border transition-colors last:border-b-0 hover:bg-muted/30"
-                  >
-                    <td className="px-4 py-3 font-medium text-foreground">
-                      {candidate.name}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {candidate.email}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge
-                        className={statusColors[candidate.status]}
-                        variant="outline"
-                      >
-                        {candidate.status}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {candidate.source}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {candidate.location}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1">
-                        {candidate.skills.map((skill) => (
-                          <Badge
-                            key={skill}
-                            variant="secondary"
-                            className="text-xs"
-                          >
-                            {skill}
-                          </Badge>
-                        ))}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+      <DataTable
+        key={refreshKey}
+        columns={columns}
+        fetchData={fetchCandidates}
+        searchPlaceholder="Search candidates..."
+        keyExtractor={(c) => c.id}
+        onRowClick={(c) => router.push(`/candidates/${c.id}`)}
+        emptyMessage="No candidates found. Add your first candidate to get started."
+        toolbar={
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="ACTIVE">Active</SelectItem>
+              <SelectItem value="PASSIVE">Passive</SelectItem>
+              <SelectItem value="DND">DND</SelectItem>
+              <SelectItem value="PLACED">Placed</SelectItem>
+            </SelectContent>
+          </Select>
+        }
+      />
+
+      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add Candidate</DialogTitle>
+            <DialogDescription>
+              Create a new candidate record.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreate}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name *</Label>
+                  <Input id="firstName" name="firstName" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name *</Label>
+                  <Input id="lastName" name="lastName" required />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" name="email" type="email" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input id="phone" name="phone" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Job Title</Label>
+                  <Input id="title" name="title" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="location">Location</Label>
+                  <Input id="location" name="location" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="source">Source</Label>
+                <select
+                  id="source"
+                  name="source"
+                  className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
+                >
+                  <option value="OTHER">Other</option>
+                  <option value="LINKEDIN">LinkedIn</option>
+                  <option value="REFERRAL">Referral</option>
+                  <option value="JOBBOARD">Job Board</option>
+                  <option value="DIRECT">Direct</option>
+                </select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowCreate(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={creating}>
+                {creating ? "Creating..." : "Create Candidate"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

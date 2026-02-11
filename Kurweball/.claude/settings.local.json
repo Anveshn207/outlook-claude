@@ -6,7 +6,12 @@
       "Bash(wsl.exe --install:*)",
       "Bash(winget.exe install:*)",
       "Bash(export PATH=\"/c/Program Files/PostgreSQL/16/bin:$PATH\")",
-      "Bash(PGPASSWORD=postgres psql:*)"
+      "Bash(PGPASSWORD=postgres psql:*)",
+      "Bash(pg_isready:*)",
+      "Bash(powershell.exe -NoProfile -Command \"& ''C:\\\\Program Files\\\\PostgreSQL\\\\16\\\\bin\\\\pg_isready.exe'' -h localhost -p 5432\")",
+      "Bash(powershell.exe:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)"
     ]
   }
 }

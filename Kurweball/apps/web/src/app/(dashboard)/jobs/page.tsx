@@ -1,96 +1,204 @@
 "use client";
 
+import { useCallback, useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-
-type JobStatus = "Open" | "On Hold" | "Closed" | "Filled";
-type JobPriority = "HOT" | "High" | "Medium" | "Low";
-type JobType = "Full-Time" | "Contract" | "Contract-to-Hire";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { DataTable, Column } from "@/components/shared/data-table";
+import { apiFetch } from "@/lib/api";
 
 interface Job {
   id: string;
   title: string;
-  client: string;
-  status: JobStatus;
-  type: JobType;
-  priority: JobPriority;
-  location: string;
-  positions: number;
+  status: string;
+  jobType: string;
+  priority: string;
+  location: string | null;
+  positionsCount: number;
+  client: { id: string; name: string };
+  _count: { submissions: number };
 }
 
-const statusColors: Record<JobStatus, string> = {
-  Open: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  "On Hold": "bg-amber-100 text-amber-700 border-amber-200",
-  Closed: "bg-gray-100 text-gray-600 border-gray-200",
-  Filled: "bg-blue-100 text-blue-700 border-blue-200",
+interface ClientOption {
+  id: string;
+  name: string;
+}
+
+const statusColors: Record<string, string> = {
+  OPEN: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  ON_HOLD: "bg-amber-100 text-amber-700 border-amber-200",
+  CLOSED: "bg-gray-100 text-gray-600 border-gray-200",
+  FILLED: "bg-blue-100 text-blue-700 border-blue-200",
 };
 
-const priorityColors: Record<JobPriority, string> = {
+const priorityColors: Record<string, string> = {
   HOT: "bg-red-100 text-red-700 border-red-200",
-  High: "bg-orange-100 text-orange-700 border-orange-200",
-  Medium: "bg-blue-100 text-blue-700 border-blue-200",
-  Low: "bg-gray-100 text-gray-600 border-gray-200",
+  NORMAL: "bg-blue-100 text-blue-700 border-blue-200",
+  LOW: "bg-gray-100 text-gray-600 border-gray-200",
 };
 
-const jobs: Job[] = [
-  {
-    id: "1",
-    title: "Senior React Developer",
-    client: "Acme Corp",
-    status: "Open",
-    type: "Full-Time",
-    priority: "HOT",
-    location: "San Francisco, CA",
-    positions: 2,
-  },
-  {
-    id: "2",
-    title: "Java Backend Engineer",
-    client: "TechFlow Inc",
-    status: "Open",
-    type: "Full-Time",
-    priority: "High",
-    location: "New York, NY (Remote)",
-    positions: 1,
-  },
-  {
-    id: "3",
-    title: "DevOps Engineer",
-    client: "CloudBase",
-    status: "Open",
-    type: "Contract",
-    priority: "Medium",
-    location: "Austin, TX",
-    positions: 1,
-  },
-  {
-    id: "4",
-    title: "Product Manager",
-    client: "NovaSoft",
-    status: "On Hold",
-    type: "Full-Time",
-    priority: "Low",
-    location: "Seattle, WA",
-    positions: 3,
-  },
-  {
-    id: "5",
-    title: "Data Scientist",
-    client: "Acme Corp",
-    status: "Filled",
-    type: "Contract-to-Hire",
-    priority: "Medium",
-    location: "Chicago, IL (Hybrid)",
-    positions: 1,
-  },
-];
+const jobTypeLabels: Record<string, string> = {
+  FULLTIME: "Full-Time",
+  CONTRACT: "Contract",
+  C2H: "Contract-to-Hire",
+};
 
 export default function JobsPage() {
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [showCreate, setShowCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [clients, setClients] = useState<ClientOption[]>([]);
+
+  useEffect(() => {
+    apiFetch<{ data: ClientOption[] }>("/clients?limit=100")
+      .then((res) => setClients(res.data))
+      .catch((err) => console.error("[JobsPage] Failed to load clients:", err));
+  }, []);
+
+  const fetchJobs = useCallback(
+    async (params: {
+      page: number;
+      limit: number;
+      search?: string;
+      sortBy?: string;
+      sortOrder?: "asc" | "desc";
+    }) => {
+      const query = new URLSearchParams();
+      query.set("page", String(params.page));
+      query.set("limit", String(params.limit));
+      if (params.search) query.set("search", params.search);
+      if (params.sortBy) query.set("sortBy", params.sortBy);
+      if (params.sortOrder) query.set("sortOrder", params.sortOrder);
+      if (statusFilter && statusFilter !== "all")
+        query.set("status", statusFilter);
+
+      const res = await apiFetch<{ data: Job[]; meta: { total: number } }>(
+        `/jobs?${query}`,
+      );
+      return { data: res.data, total: res.meta.total };
+    },
+    [statusFilter],
+  );
+
+  const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setCreating(true);
+    const form = new FormData(e.currentTarget);
+    try {
+      await apiFetch("/jobs", {
+        method: "POST",
+        body: JSON.stringify({
+          title: form.get("title"),
+          clientId: form.get("clientId"),
+          description: form.get("description") || undefined,
+          location: form.get("location") || undefined,
+          jobType: form.get("jobType") || undefined,
+          priority: form.get("priority") || undefined,
+          positionsCount: Number(form.get("positionsCount")) || 1,
+        }),
+      });
+      setShowCreate(false);
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      console.error("[JobsPage] Create failed:", err);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const columns: Column<Job>[] = [
+    {
+      key: "title",
+      header: "Title",
+      sortable: true,
+      render: (j) => (
+        <span className="font-medium text-foreground">{j.title}</span>
+      ),
+    },
+    {
+      key: "client",
+      header: "Client",
+      render: (j) => (
+        <span className="text-muted-foreground">{j.client.name}</span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      sortable: true,
+      render: (j) => (
+        <Badge className={statusColors[j.status] ?? ""} variant="outline">
+          {j.status.replace("_", " ")}
+        </Badge>
+      ),
+    },
+    {
+      key: "jobType",
+      header: "Type",
+      render: (j) => (
+        <span className="text-muted-foreground">
+          {jobTypeLabels[j.jobType] ?? j.jobType}
+        </span>
+      ),
+    },
+    {
+      key: "priority",
+      header: "Priority",
+      sortable: true,
+      render: (j) => (
+        <Badge className={priorityColors[j.priority] ?? ""} variant="outline">
+          {j.priority}
+        </Badge>
+      ),
+    },
+    {
+      key: "location",
+      header: "Location",
+      render: (j) => (
+        <span className="text-muted-foreground">{j.location ?? "-"}</span>
+      ),
+    },
+    {
+      key: "positionsCount",
+      header: "Positions",
+      className: "text-right",
+      render: (j) => (
+        <span className="font-medium text-foreground">{j.positionsCount}</span>
+      ),
+    },
+    {
+      key: "submissions",
+      header: "Submissions",
+      className: "text-right",
+      render: (j) => (
+        <span className="font-medium text-foreground">
+          {j._count.submissions}
+        </span>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Jobs</h2>
@@ -98,86 +206,127 @@ export default function JobsPage() {
             Track open positions and manage job requisitions.
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setShowCreate(true)}>
           <Plus className="h-4 w-4" />
           Add Job
         </Button>
       </div>
 
-      {/* Table */}
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Title
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Client
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Status
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Type
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Priority
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                    Location
-                  </th>
-                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">
-                    Positions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {jobs.map((job) => (
-                  <tr
-                    key={job.id}
-                    className="border-b border-border transition-colors last:border-b-0 hover:bg-muted/30"
+      <DataTable
+        key={refreshKey}
+        columns={columns}
+        fetchData={fetchJobs}
+        searchPlaceholder="Search jobs..."
+        keyExtractor={(j) => j.id}
+        emptyMessage="No jobs found. Create your first job to get started."
+        toolbar={
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="OPEN">Open</SelectItem>
+              <SelectItem value="ON_HOLD">On Hold</SelectItem>
+              <SelectItem value="FILLED">Filled</SelectItem>
+              <SelectItem value="CLOSED">Closed</SelectItem>
+            </SelectContent>
+          </Select>
+        }
+      />
+
+      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add Job</DialogTitle>
+            <DialogDescription>
+              Create a new job requisition.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreate}>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">Job Title *</Label>
+                <Input id="title" name="title" required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="clientId">Client *</Label>
+                <select
+                  id="clientId"
+                  name="clientId"
+                  required
+                  className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
+                >
+                  <option value="">Select a client...</option>
+                  {clients.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="jobType">Type</Label>
+                  <select
+                    id="jobType"
+                    name="jobType"
+                    className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
                   >
-                    <td className="px-4 py-3 font-medium text-foreground">
-                      {job.title}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {job.client}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge
-                        className={statusColors[job.status]}
-                        variant="outline"
-                      >
-                        {job.status}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {job.type}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge
-                        className={priorityColors[job.priority]}
-                        variant="outline"
-                      >
-                        {job.priority}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {job.location}
-                    </td>
-                    <td className="px-4 py-3 text-right font-medium text-foreground">
-                      {job.positions}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+                    <option value="FULLTIME">Full-Time</option>
+                    <option value="CONTRACT">Contract</option>
+                    <option value="C2H">Contract-to-Hire</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="priority">Priority</Label>
+                  <select
+                    id="priority"
+                    name="priority"
+                    className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
+                  >
+                    <option value="NORMAL">Normal</option>
+                    <option value="HOT">Hot</option>
+                    <option value="LOW">Low</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="location">Location</Label>
+                  <Input id="location" name="location" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="positionsCount">Positions</Label>
+                  <Input
+                    id="positionsCount"
+                    name="positionsCount"
+                    type="number"
+                    min="1"
+                    defaultValue="1"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea id="description" name="description" rows={3} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowCreate(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={creating}>
+                {creating ? "Creating..." : "Create Job"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
