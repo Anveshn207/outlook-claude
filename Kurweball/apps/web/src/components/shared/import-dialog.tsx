@@ -59,8 +59,7 @@ interface MappingSuggestion {
 interface ImportResult {
   created: number;
   skipped: number;
-  errors: number;
-  errorDetails?: { row: number; message: string }[];
+  errors: { row: number; message: string }[];
 }
 
 // ---------------------------------------------------------------------------
@@ -557,7 +556,7 @@ export function ImportDialog({
               </div>
               <div className="rounded-md border p-3 text-center">
                 <p className="text-2xl font-bold text-red-600">
-                  {importResult.errors}
+                  {importResult.errors.length}
                 </p>
                 <Badge className="mt-1 bg-red-500/15 text-red-700 border-red-500/25 hover:bg-red-500/15">
                   Errors
@@ -565,14 +564,13 @@ export function ImportDialog({
               </div>
             </div>
 
-            {importResult.errorDetails &&
-              importResult.errorDetails.length > 0 && (
+            {importResult.errors.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-destructive">
                     Error Details
                   </p>
                   <div className="max-h-40 overflow-y-auto rounded-md border bg-muted/30 p-3 space-y-1.5">
-                    {importResult.errorDetails.map((detail, i) => (
+                    {importResult.errors.map((detail, i) => (
                       <div
                         key={i}
                         className="flex items-start gap-2 text-sm"

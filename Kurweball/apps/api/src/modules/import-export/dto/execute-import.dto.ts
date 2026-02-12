@@ -2,6 +2,7 @@ import {
   IsArray,
   IsIn,
   IsNumber,
+  IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
@@ -15,9 +16,10 @@ class ColumnMappingDto {
   @IsString()
   targetField!: string;
 
+  @IsOptional()
   @IsNumber()
   @Type(() => Number)
-  confidence!: number;
+  confidence?: number;
 }
 
 export class ExecuteImportDto {

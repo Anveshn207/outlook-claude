@@ -52,7 +52,7 @@ export class ImportController {
   ) {
     return this.importService.executeImport(
       user.tenantId,
-      user.sub,
+      user.id,
       dto.fileId,
       dto.entityType,
       dto.mappings,
