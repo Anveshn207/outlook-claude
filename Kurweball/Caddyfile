@@ -1,7 +1,9 @@
 {$DOMAIN:localhost} {
 	# API reverse proxy
 	handle /api/* {
-		reverse_proxy api:3001
+		reverse_proxy api:3001 {
+			flush_interval -1
+		}
 	}
 
 	# Frontend
