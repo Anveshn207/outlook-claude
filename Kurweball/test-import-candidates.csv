@@ -1,0 +1,6 @@
+First Name,Last Name,Email,Phone,Job Title,Location,Skills,Source
+John,Test,john.test@example.com,555-0101,Software Engineer,New York,"React, Node.js, TypeScript",LINKEDIN
+Jane,Import,jane.import@example.com,555-0102,Product Manager,San Francisco,"Agile, Scrum, Jira",REFERRAL
+Bob,Bulk,bob.bulk@example.com,555-0103,Data Analyst,Chicago,"Python, SQL, Tableau",JOBBOARD
+Alice,Demo,alice.demo@example.com,555-0104,UX Designer,Austin,"Figma, CSS, User Research",DIRECT
+Charlie,Upload,charlie.upload@example.com,555-0105,DevOps Engineer,Seattle,"AWS, Docker, Kubernetes",OTHER
