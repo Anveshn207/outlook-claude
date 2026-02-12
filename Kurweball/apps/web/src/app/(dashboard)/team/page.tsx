@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState, useEffect } from "react";
-import { Shield, UserPlus, ShieldAlert, Copy, Trash2, Clock, CheckCircle2 } from "lucide-react";
+import { Shield, UserPlus, ShieldAlert, Copy, Trash2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -68,7 +68,6 @@ export default function TeamPage() {
 
   // Invites state
   const [invites, setInvites] = useState<InviteRow[]>([]);
-  const [loadingInvites, setLoadingInvites] = useState(false);
 
   // Edit form state
   const [editFirstName, setEditFirstName] = useState("");
@@ -90,14 +89,11 @@ export default function TeamPage() {
 
   // Fetch pending invites
   const fetchInvites = useCallback(async () => {
-    setLoadingInvites(true);
     try {
       const data = await apiFetch<InviteRow[]>("/invites");
       setInvites(data);
     } catch (err) {
       console.error("[TeamPage] Failed to fetch invites:", err);
-    } finally {
-      setLoadingInvites(false);
     }
   }, []);
 
