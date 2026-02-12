@@ -21,7 +21,7 @@ export async function apiFetch<T = unknown>(
   path: string,
   options: ApiFetchOptions = {},
 ): Promise<T> {
-  const { skipAuth = false, headers: customHeaders, ...rest } = options;
+  const { skipAuth: _skipAuth = false, headers: customHeaders, ...rest } = options;
   const method = (rest.method || "GET").toUpperCase();
 
   const headers: Record<string, string> = {
@@ -29,22 +29,14 @@ export async function apiFetch<T = unknown>(
     ...((customHeaders as Record<string, string>) || {}),
   };
 
-  if (!skipAuth) {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
-  }
-
   let response: Response;
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       headers,
+      credentials: "include",
       ...rest,
     });
   } catch (err) {
-    // Network error (no internet, DNS failure, server unreachable, etc.)
     console.error("[API] Network error", method, path, err);
     throw new ApiError(
       0,
@@ -53,8 +45,10 @@ export async function apiFetch<T = unknown>(
   }
 
   if (response.status === 401) {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("auth_token");
+    if (typeof window !== "undefined" && !path.startsWith("/auth/")) {
+      // Clear local user state and redirect
+      const { useAuthStore } = await import("@/stores/auth-store");
+      useAuthStore.getState().logout();
       window.location.href = "/login";
     }
     throw new ApiError(401, "Unauthorized");
@@ -70,7 +64,6 @@ export async function apiFetch<T = unknown>(
     try {
       const parsed = JSON.parse(errorBody);
 
-      // Support structured error format: { success: false, error: { code, message, details, referenceId } }
       if (parsed.error && typeof parsed.error === "object") {
         const err = parsed.error;
         message = err.message || parsed.message || errorBody;
@@ -78,14 +71,13 @@ export async function apiFetch<T = unknown>(
         details = err.details;
         referenceId = err.referenceId;
       } else {
-        // Fallback for flat error responses
         message = parsed.message || parsed.error || errorBody;
         code = parsed.code;
         details = parsed.details;
         referenceId = parsed.referenceId;
       }
     } catch {
-      // Response body was not JSON — keep raw text as message
+      // Response body was not JSON
     }
 
     if (response.status >= 500 && referenceId) {

@@ -21,14 +21,17 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { UsersModule } from './modules/users/users.module';
 import { ImportExportModule } from './modules/import-export/import-export.module';
 import { HealthModule } from './modules/health/health.module';
+import { InvitesModule } from './modules/invites/invites.module';
 import { RolesGuard } from './modules/auth/rbac/roles.guard';
 import { RequestLoggerMiddleware } from './common/middleware';
+import { validate } from './common/env.validation';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: ['.env.local', '.env', '../../.env'],
+      validate,
     }),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     PrismaModule,
@@ -50,6 +53,7 @@ import { RequestLoggerMiddleware } from './common/middleware';
     UsersModule,
     ImportExportModule,
     HealthModule,
+    InvitesModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: RolesGuard },

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Users, Briefcase, Building2, Upload } from "lucide-react";
+import { Users, Briefcase, Building2, Upload, ShieldAlert } from "lucide-react";
+import { usePermissions } from "@/hooks/use-permissions";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -59,8 +60,21 @@ const importCards: ImportCard[] = [
 // ---------------------------------------------------------------------------
 
 export default function ImportPage() {
+  const { can } = usePermissions();
   const [selectedEntity, setSelectedEntity] = useState<EntityType | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  if (!can("import-export:read")) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <ShieldAlert className="h-16 w-16 text-muted-foreground/50 mb-4" />
+        <h2 className="text-xl font-semibold text-foreground">Access Denied</h2>
+        <p className="mt-2 text-sm text-muted-foreground max-w-md">
+          You don&apos;t have permission to access this page.
+        </p>
+      </div>
+    );
+  }
 
   function handleImportClick(entity: EntityType) {
     setSelectedEntity(entity);

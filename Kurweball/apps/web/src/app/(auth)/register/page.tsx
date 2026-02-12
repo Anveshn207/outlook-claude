@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { apiFetch, ApiError } from "@/lib/api";
 import { useAuthStore, type AuthUser } from "@/stores/auth-store";
@@ -18,7 +18,10 @@ import {
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const login = useAuthStore((s) => s.login);
+
+  const inviteToken = searchParams.get("token");
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -26,6 +29,37 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [validating, setValidating] = useState(!!inviteToken);
+  const [inviteValid, setInviteValid] = useState(false);
+
+  // Validate invite token on mount
+  useEffect(() => {
+    if (!inviteToken) {
+      setValidating(false);
+      return;
+    }
+
+    async function validateInvite() {
+      try {
+        const data = await apiFetch<{ email: string; role: string }>(
+          `/invites/validate/${inviteToken}`,
+          { skipAuth: true },
+        );
+        setEmail(data.email);
+        setInviteValid(true);
+      } catch (err) {
+        if (err instanceof ApiError) {
+          setError(err.message);
+        } else {
+          setError("Invalid or expired invite link.");
+        }
+      } finally {
+        setValidating(false);
+      }
+    }
+
+    validateInvite();
+  }, [inviteToken]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -33,16 +67,27 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const data = await apiFetch<{ accessToken: string; refreshToken: string; user: AuthUser }>(
-        "/auth/register",
-        {
+      let data: { user: AuthUser };
+
+      if (inviteToken) {
+        data = await apiFetch<typeof data>("/auth/register-with-invite", {
+          method: "POST",
+          body: JSON.stringify({
+            firstName,
+            lastName,
+            email,
+            password,
+            inviteToken,
+          }),
+        });
+      } else {
+        data = await apiFetch<typeof data>("/auth/register", {
           method: "POST",
           body: JSON.stringify({ firstName, lastName, email, password }),
-          skipAuth: true,
-        },
-      );
+        });
+      }
 
-      login(data.accessToken, data.user);
+      login(data.user);
       router.push("/dashboard");
     } catch (err) {
       if (err instanceof ApiError) {
@@ -55,11 +100,30 @@ export default function RegisterPage() {
     }
   }
 
+  if (validating) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <span className="ml-3 text-sm text-muted-foreground">
+            Validating invite...
+          </span>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
-        <CardDescription>Get started with Kurweball</CardDescription>
+        <CardTitle className="text-2xl font-bold">
+          {inviteToken ? "Accept Invite" : "Create an account"}
+        </CardTitle>
+        <CardDescription>
+          {inviteToken
+            ? "Complete your registration to join the team"
+            : "Get started with Kurweball"}
+        </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
@@ -119,6 +183,7 @@ export default function RegisterPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
+              disabled={inviteToken ? inviteValid : false}
             />
           </div>
           <div className="space-y-2">
@@ -141,8 +206,16 @@ export default function RegisterPage() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Creating account..." : "Create account"}
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={loading || (!!inviteToken && !inviteValid)}
+          >
+            {loading
+              ? "Creating account..."
+              : inviteToken
+                ? "Join Team"
+                : "Create account"}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
             Already have an account?{" "}

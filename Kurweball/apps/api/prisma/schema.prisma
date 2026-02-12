@@ -155,6 +155,7 @@ model Tenant {
   savedViews      SavedView[]
   pipelineTemplates PipelineTemplate[]
   notifications     Notification[]
+  inviteTokens      InviteToken[]
 
   @@map("tenants")
 }
@@ -187,6 +188,8 @@ model User {
   tasksCreated         Task[]                @relation("TaskCreatedBy")
   savedViews           SavedView[]           @relation("SavedViewCreatedBy")
   notifications        Notification[]
+  invitesCreated       InviteToken[]         @relation("InviteCreatedBy")
+  refreshTokens        RefreshToken[]
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -560,4 +563,38 @@ model Notification {
   @@index([tenantId])
   @@index([userId, isRead])
   @@map("notifications")
+}
+
+model InviteToken {
+  id          String    @id @default(cuid())
+  tenantId    String
+  email       String
+  role        UserRole  @default(RECRUITER)
+  token       String    @unique
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdById String
+  createdAt   DateTime  @default(now())
+
+  tenant    Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdBy User   @relation("InviteCreatedBy", fields: [createdById], references: [id])
+
+  @@index([tenantId])
+  @@index([token])
+  @@map("invite_tokens")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  isRevoked Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("refresh_tokens")
 }

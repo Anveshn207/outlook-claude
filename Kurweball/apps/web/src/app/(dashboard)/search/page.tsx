@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Loader2, Search, User, Briefcase, MapPin } from "lucide-react";
+import { ArrowLeft, Loader2, Search, User, Briefcase, MapPin, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { apiFetch } from "@/lib/api";
 import { useDebounce } from "@/hooks/use-debounce";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface SearchHit {
   id: string;
@@ -56,6 +57,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function SearchPage() {
+  const { can } = usePermissions();
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
@@ -150,6 +152,18 @@ export default function SearchPage() {
       doSearch(debouncedQuery, page);
     }
   }, [page, debouncedQuery, doSearch]);
+
+  if (!can("search:read")) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <ShieldAlert className="h-16 w-16 text-muted-foreground/50 mb-4" />
+        <h2 className="text-xl font-semibold text-foreground">Access Denied</h2>
+        <p className="mt-2 text-sm text-muted-foreground max-w-md">
+          You don&apos;t have permission to access this page.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

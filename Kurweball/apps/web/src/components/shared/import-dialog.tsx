@@ -197,10 +197,9 @@ export function ImportDialog({
       formData.append("file", selectedFile);
       formData.append("entityType", entityType);
 
-      const token = localStorage.getItem("auth_token");
       const response = await fetch(`${API_BASE_URL}/import/upload`, {
         method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        credentials: "include",
         body: formData,
       });
 

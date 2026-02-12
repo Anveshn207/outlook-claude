@@ -11,22 +11,20 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { token, hydrate } = useAuthStore();
+  const { user, hydrate } = useAuthStore();
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    hydrate();
-    setHydrated(true);
+    hydrate().then(() => setHydrated(true));
   }, [hydrate]);
 
   useEffect(() => {
-    if (hydrated && !token) {
+    if (hydrated && !user) {
       router.replace("/login");
     }
-  }, [hydrated, token, router]);
+  }, [hydrated, user, router]);
 
-  // Show nothing while hydrating or if unauthenticated (redirect pending)
-  if (!hydrated || !token) {
+  if (!hydrated || !user) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />

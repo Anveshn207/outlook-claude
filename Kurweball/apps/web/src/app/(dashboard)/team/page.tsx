@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { Shield, UserPlus, ShieldAlert } from "lucide-react";
+import { useCallback, useState, useEffect } from "react";
+import { Shield, UserPlus, ShieldAlert, Copy, Trash2, Clock, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -21,9 +21,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, Column } from "@/components/shared/data-table";
 import { apiFetch } from "@/lib/api";
 import { usePermissions } from "@/hooks/use-permissions";
+import { useToast } from "@/hooks/use-toast";
 
 interface UserRow {
   id: string;
@@ -36,6 +38,17 @@ interface UserRow {
   avatarUrl: string | null;
 }
 
+interface InviteRow {
+  id: string;
+  email: string;
+  role: string;
+  token: string;
+  expiresAt: string;
+  usedAt: string | null;
+  createdAt: string;
+  createdBy: { firstName: string; lastName: string };
+}
+
 const roleColors: Record<string, string> = {
   ADMIN: "bg-purple-100 text-purple-700 border-purple-200",
   RECRUITER: "bg-blue-100 text-blue-700 border-blue-200",
@@ -45,12 +58,17 @@ const roleColors: Record<string, string> = {
 
 export default function TeamPage() {
   const { can } = usePermissions();
+  const toast = useToast((s) => s.toast);
   const [showInvite, setShowInvite] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [editingUser, setEditingUser] = useState<UserRow | null>(null);
   const [inviting, setInviting] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // Invites state
+  const [invites, setInvites] = useState<InviteRow[]>([]);
+  const [loadingInvites, setLoadingInvites] = useState(false);
 
   // Edit form state
   const [editFirstName, setEditFirstName] = useState("");
@@ -69,6 +87,25 @@ export default function TeamPage() {
       </div>
     );
   }
+
+  // Fetch pending invites
+  const fetchInvites = useCallback(async () => {
+    setLoadingInvites(true);
+    try {
+      const data = await apiFetch<InviteRow[]>("/invites");
+      setInvites(data);
+    } catch (err) {
+      console.error("[TeamPage] Failed to fetch invites:", err);
+    } finally {
+      setLoadingInvites(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (can("users:read")) {
+      fetchInvites();
+    }
+  }, [fetchInvites, can]);
 
   const fetchUsers = useCallback(
     async (params: {
@@ -99,23 +136,57 @@ export default function TeamPage() {
     setInviting(true);
     const form = new FormData(e.currentTarget);
     try {
-      await apiFetch("/users", {
+      const invite = await apiFetch<InviteRow>("/invites", {
         method: "POST",
         body: JSON.stringify({
           email: form.get("email"),
-          password: form.get("password"),
-          firstName: form.get("firstName"),
-          lastName: form.get("lastName"),
           role: form.get("role") || "RECRUITER",
         }),
       });
       setShowInvite(false);
-      setRefreshKey((k) => k + 1);
+
+      // Build the invite link
+      const baseUrl = window.location.origin;
+      const inviteLink = `${baseUrl}/register?token=${invite.token}`;
+      await navigator.clipboard.writeText(inviteLink);
+      toast({
+        title: "Invite created",
+        description: "Invite link copied to clipboard.",
+        variant: "success",
+      });
+      fetchInvites();
     } catch (err) {
       console.error("[TeamPage] Invite failed:", err);
+      toast({
+        title: "Failed to send invite",
+        description: err instanceof Error ? err.message : undefined,
+        variant: "error",
+      });
     } finally {
       setInviting(false);
     }
+  };
+
+  const handleDeleteInvite = async (id: string) => {
+    try {
+      await apiFetch(`/invites/${id}`, { method: "DELETE" });
+      toast({ title: "Invite deleted", variant: "success" });
+      fetchInvites();
+    } catch (err) {
+      console.error("[TeamPage] Delete invite failed:", err);
+      toast({
+        title: "Failed to delete invite",
+        description: err instanceof Error ? err.message : undefined,
+        variant: "error",
+      });
+    }
+  };
+
+  const handleCopyLink = async (token: string) => {
+    const baseUrl = window.location.origin;
+    const link = `${baseUrl}/register?token=${token}`;
+    await navigator.clipboard.writeText(link);
+    toast({ title: "Invite link copied", variant: "success" });
   };
 
   const openEditDialog = (row: UserRow) => {
@@ -144,12 +215,22 @@ export default function TeamPage() {
       setShowEdit(false);
       setEditingUser(null);
       setRefreshKey((k) => k + 1);
+      toast({ title: "User updated", variant: "success" });
     } catch (err) {
       console.error("[TeamPage] Edit failed:", err);
+      toast({
+        title: "Failed to update user",
+        description: err instanceof Error ? err.message : undefined,
+        variant: "error",
+      });
     } finally {
       setUpdating(false);
     }
   };
+
+  const pendingInvites = invites.filter(
+    (i) => !i.usedAt && new Date(i.expiresAt) > new Date(),
+  );
 
   const columns: Column<UserRow>[] = [
     {
@@ -199,7 +280,7 @@ export default function TeamPage() {
     },
     {
       key: "createdAt",
-      header: "Created At",
+      header: "Joined",
       sortable: true,
       render: (u) => (
         <span className="text-muted-foreground">
@@ -251,6 +332,69 @@ export default function TeamPage() {
         )}
       </div>
 
+      {/* Pending Invites */}
+      {can("users:create") && pendingInvites.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Pending Invites ({pendingInvites.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-2">
+              {pendingInvites.map((invite) => (
+                <div
+                  key={invite.id}
+                  className="flex items-center justify-between rounded-lg border border-border px-4 py-2.5"
+                >
+                  <div className="flex items-center gap-3">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <span className="text-sm font-medium">
+                        {invite.email}
+                      </span>
+                      <Badge
+                        className={`ml-2 ${roleColors[invite.role] ?? ""}`}
+                        variant="outline"
+                      >
+                        {invite.role}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="mr-2 text-xs text-muted-foreground">
+                      Expires{" "}
+                      {new Date(invite.expiresAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => handleCopyLink(invite.token)}
+                      title="Copy invite link"
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-destructive hover:text-destructive"
+                      onClick={() => handleDeleteInvite(invite.id)}
+                      title="Delete invite"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <DataTable
         key={refreshKey}
         columns={columns}
@@ -262,11 +406,11 @@ export default function TeamPage() {
 
       {/* Invite User Dialog */}
       <Dialog open={showInvite} onOpenChange={setShowInvite}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
             <DialogTitle>Invite User</DialogTitle>
             <DialogDescription>
-              Add a new team member to your organization.
+              Send an invite link to add a new team member.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleInvite}>
@@ -280,37 +424,6 @@ export default function TeamPage() {
                   required
                   placeholder="user@example.com"
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="invite-password">Password *</Label>
-                <Input
-                  id="invite-password"
-                  name="password"
-                  type="password"
-                  required
-                  minLength={6}
-                  placeholder="Min. 6 characters"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="invite-firstName">First Name *</Label>
-                  <Input
-                    id="invite-firstName"
-                    name="firstName"
-                    required
-                    placeholder="John"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="invite-lastName">Last Name *</Label>
-                  <Input
-                    id="invite-lastName"
-                    name="lastName"
-                    required
-                    placeholder="Doe"
-                  />
-                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="invite-role">Role</Label>
@@ -336,7 +449,7 @@ export default function TeamPage() {
                 Cancel
               </Button>
               <Button type="submit" disabled={inviting}>
-                {inviting ? "Inviting..." : "Invite User"}
+                {inviting ? "Creating..." : "Create Invite"}
               </Button>
             </DialogFooter>
           </form>

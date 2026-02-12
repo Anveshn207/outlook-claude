@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ShieldAlert } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +25,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { GripVertical, Loader2, UserPlus } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { usePermissions } from "@/hooks/use-permissions";
 
 /* ─── Types ─── */
 
@@ -119,6 +121,7 @@ const statusColors: Record<string, string> = {
 /* ─── Main Page ─── */
 
 export default function PipelinePage() {
+  const { can } = usePermissions();
   const [jobs, setJobs] = useState<PipelineJob[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string>("");
   const [kanban, setKanban] = useState<KanbanData | null>(null);
@@ -283,6 +286,18 @@ export default function PipelinePage() {
   };
 
   /* ─── Render ─── */
+
+  if (!can("pipeline:read")) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <ShieldAlert className="h-16 w-16 text-muted-foreground/50 mb-4" />
+        <h2 className="text-xl font-semibold text-foreground">Access Denied</h2>
+        <p className="mt-2 text-sm text-muted-foreground max-w-md">
+          You don&apos;t have permission to access this page.
+        </p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

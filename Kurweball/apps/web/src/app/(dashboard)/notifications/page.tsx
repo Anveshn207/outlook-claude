@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import Link from "next/link";
-import { CheckCheck, ExternalLink } from "lucide-react";
+import { CheckCheck, ExternalLink, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { DataTable, Column } from "@/components/shared/data-table";
 import { apiFetch } from "@/lib/api";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface NotificationRow {
   id: string;
@@ -54,6 +55,7 @@ function formatDate(dateStr: string): string {
 }
 
 export default function NotificationsPage() {
+  const { can } = usePermissions();
   const [readFilter, setReadFilter] = useState<string>("all");
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -90,6 +92,18 @@ export default function NotificationsPage() {
       console.error("[NotificationsPage] Mark all read failed:", err);
     }
   };
+
+  if (!can("notifications:read")) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <ShieldAlert className="h-16 w-16 text-muted-foreground/50 mb-4" />
+        <h2 className="text-xl font-semibold text-foreground">Access Denied</h2>
+        <p className="mt-2 text-sm text-muted-foreground max-w-md">
+          You don&apos;t have permission to access this page.
+        </p>
+      </div>
+    );
+  }
 
   const columns: Column<NotificationRow>[] = [
     {

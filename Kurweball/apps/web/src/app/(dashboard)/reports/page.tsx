@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BarChart3, TrendingDown, PieChart, Loader2, Clock, Target, Zap, Download } from "lucide-react";
+import { BarChart3, TrendingDown, PieChart, Loader2, Clock, Target, Zap, Download, ShieldAlert } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface RecruiterStat {
   recruiter: { id: string; firstName: string; lastName: string };
@@ -57,6 +58,7 @@ const jobStatusColors: Record<string, string> = {
 };
 
 export default function ReportsPage() {
+  const { can } = usePermissions();
   const [recruiterStats, setRecruiterStats] = useState<RecruiterStat[]>([]);
   const [funnel, setFunnel] = useState<FunnelStage[]>([]);
   const [jobsOverview, setJobsOverview] = useState<JobsOverview | null>(null);
@@ -65,6 +67,18 @@ export default function ReportsPage() {
   const [pipelineVelocity, setPipelineVelocity] = useState<PipelineVelocity[]>([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState<string | null>(null);
+
+  if (!can("reports:read")) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <ShieldAlert className="h-16 w-16 text-muted-foreground/50 mb-4" />
+        <h2 className="text-xl font-semibold text-foreground">Access Denied</h2>
+        <p className="mt-2 text-sm text-muted-foreground max-w-md">
+          You don&apos;t have permission to access this page.
+        </p>
+      </div>
+    );
+  }
 
   useEffect(() => {
     async function loadReports() {
@@ -101,11 +115,10 @@ export default function ReportsPage() {
   const handleExport = async (type: "candidates" | "submissions") => {
     setExporting(type);
     try {
-      const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"}/reports/export/${type}`,
         {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          credentials: "include",
         }
       );
       if (!res.ok) throw new Error("Export failed");

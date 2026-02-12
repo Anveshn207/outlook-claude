@@ -52,18 +52,11 @@ export function ExportDropdown({ entity }: ExportDropdownProps) {
       setLoadingFormat(format);
 
       try {
-        const token =
-          typeof window !== "undefined"
-            ? localStorage.getItem("auth_token")
-            : null;
-
         const response = await fetch(
           `${API_BASE_URL}/export/${entity}?format=${format}`,
           {
             method: "GET",
-            headers: {
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
+            credentials: "include",
           },
         );
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Plus, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Plus, CheckCircle2, AlertTriangle, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DataTable, Column } from "@/components/shared/data-table";
 import { apiFetch } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface TaskRow {
   id: string;
@@ -62,6 +63,7 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function TasksPage() {
+  const { can } = usePermissions();
   const { user } = useAuthStore();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
@@ -128,6 +130,18 @@ export default function TasksPage() {
       console.error("[TasksPage] Complete failed:", err);
     }
   };
+
+  if (!can("tasks:read")) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <ShieldAlert className="h-16 w-16 text-muted-foreground/50 mb-4" />
+        <h2 className="text-xl font-semibold text-foreground">Access Denied</h2>
+        <p className="mt-2 text-sm text-muted-foreground max-w-md">
+          You don&apos;t have permission to access this page.
+        </p>
+      </div>
+    );
+  }
 
   const columns: Column<TaskRow>[] = [
     {

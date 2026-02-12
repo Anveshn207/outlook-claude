@@ -31,16 +31,15 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const data = await apiFetch<{ accessToken: string; refreshToken: string; user: AuthUser }>(
+      const data = await apiFetch<{ user: AuthUser }>(
         "/auth/login",
         {
           method: "POST",
           body: JSON.stringify({ email, password }),
-          skipAuth: true,
         },
       );
 
-      login(data.accessToken, data.user);
+      login(data.user);
       router.push("/dashboard");
     } catch (err) {
       if (err instanceof ApiError) {

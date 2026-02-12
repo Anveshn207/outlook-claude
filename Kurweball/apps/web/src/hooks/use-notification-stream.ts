@@ -21,21 +21,15 @@ export function useNotificationStream({
   const connect = useCallback(async () => {
     if (!enabledRef.current) return;
 
-    const token = typeof window !== "undefined"
-      ? localStorage.getItem("auth_token")
-      : null;
-
-    if (!token) return;
-
     const controller = new AbortController();
     abortRef.current = controller;
 
     try {
       const response = await fetch(`${API_URL}/notifications/stream`, {
         headers: {
-          Authorization: `Bearer ${token}`,
           Accept: "text/event-stream",
         },
+        credentials: "include",
         signal: controller.signal,
       });
 
@@ -53,7 +47,6 @@ export function useNotificationStream({
       const decoder = new TextDecoder();
       let buffer = "";
 
-      // Reset retry delay on successful connection
       retryDelayRef.current = 1000;
       console.log("[NotificationStream] Connected");
 
@@ -74,7 +67,6 @@ export function useNotificationStream({
           } else if (line.startsWith("data:")) {
             eventData = line.slice(5).trim();
           } else if (line === "" && eventData) {
-            // End of event
             if (eventType === "notification" && eventData) {
               try {
                 const parsed = JSON.parse(eventData);

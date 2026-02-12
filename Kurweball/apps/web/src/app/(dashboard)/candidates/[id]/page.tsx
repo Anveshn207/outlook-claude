@@ -164,15 +164,11 @@ export default function CandidateProfilePage() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const token =
-        typeof window !== "undefined"
-          ? localStorage.getItem("auth_token")
-          : null;
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"}/resumes/upload/${params.id}`,
         {
           method: "POST",
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          credentials: "include",
           body: formData,
         },
       );
