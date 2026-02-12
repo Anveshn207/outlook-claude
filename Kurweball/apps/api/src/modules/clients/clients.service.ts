@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { ClientStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
@@ -215,5 +215,24 @@ export class ClientsService {
     }
 
     return contact;
+  }
+
+  // ─── Bulk Methods ──────────────────────────────────────────────────────
+
+  async bulkUpdateStatus(tenantId: string, ids: string[], status: ClientStatus) {
+    const result = await this.prisma.client.updateMany({
+      where: { id: { in: ids }, tenantId },
+      data: { status },
+    });
+    console.log(`[ClientsService] bulkUpdateStatus count=${result.count} status=${status}`);
+    return { updated: result.count };
+  }
+
+  async bulkDelete(tenantId: string, ids: string[]) {
+    const result = await this.prisma.client.deleteMany({
+      where: { id: { in: ids }, tenantId },
+    });
+    console.log(`[ClientsService] bulkDelete count=${result.count}`);
+    return { deleted: result.count };
   }
 }

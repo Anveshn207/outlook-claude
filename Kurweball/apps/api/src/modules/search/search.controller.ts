@@ -15,6 +15,7 @@ import {
   CurrentUserPayload,
 } from '../auth/decorators/current-user.decorator';
 import { PrismaService } from '../../prisma/prisma.service';
+import { RequirePermissions } from '../auth/rbac';
 
 @Controller('search')
 @UseGuards(JwtAuthGuard)
@@ -25,6 +26,7 @@ export class SearchController {
   ) {}
 
   @Get('candidates')
+  @RequirePermissions('search:read')
   async searchCandidates(
     @CurrentUser() user: CurrentUserPayload,
     @Query() dto: SearchCandidatesDto,
@@ -39,6 +41,7 @@ export class SearchController {
   }
 
   @Post('reindex')
+  @RequirePermissions('search:reindex')
   @HttpCode(HttpStatus.OK)
   async reindex(@CurrentUser() user: CurrentUserPayload) {
     this.searchService.reindexAll(user.tenantId, this.prisma);

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Bell, Check, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
+import { useNotificationStream } from "@/hooks/use-notification-stream";
 
 interface Notification {
   id: string;
@@ -54,12 +55,32 @@ export function NotificationBell() {
     }
   }, []);
 
-  // Poll unread count every 30 seconds
+  // Fetch unread count on mount
   useEffect(() => {
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30000);
-    return () => clearInterval(interval);
   }, [fetchUnreadCount]);
+
+  // SSE stream for real-time notifications
+  useNotificationStream({
+    onNotification: useCallback((notif: Record<string, unknown>) => {
+      setUnreadCount((prev) => prev + 1);
+      // If dropdown is open, prepend the new notification
+      if (notif.id && notif.title) {
+        setNotifications((prev) => [
+          {
+            id: notif.id as string,
+            type: (notif.type as string) ?? "SYSTEM",
+            title: notif.title as string,
+            message: (notif.message as string) ?? "",
+            isRead: false,
+            link: (notif.link as string) ?? null,
+            createdAt: (notif.createdAt as string) ?? new Date().toISOString(),
+          },
+          ...prev.slice(0, 4), // Keep max 5
+        ]);
+      }
+    }, []),
+  });
 
   // Fetch recent notifications when dropdown opens
   const fetchNotifications = useCallback(async () => {

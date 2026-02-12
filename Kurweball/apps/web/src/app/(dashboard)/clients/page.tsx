@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Upload } from "lucide-react";
+import { Plus, Upload, Trash2 } from "lucide-react";
 import { ExportDropdown } from "@/components/shared/export-dropdown";
 import { ImportDialog } from "@/components/shared/import-dialog";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,8 @@ import { DataTable, Column } from "@/components/shared/data-table";
 import { CustomFieldInput } from "@/components/shared/custom-field-input";
 import { CustomFieldDisplay } from "@/components/shared/custom-field-display";
 import { useCustomFields } from "@/hooks/use-custom-fields";
+import { usePermissions } from "@/hooks/use-permissions";
+import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/api";
 
 interface Client {
@@ -57,6 +59,8 @@ export default function ClientsPage() {
   const [showImport, setShowImport] = useState(false);
   const [customValues, setCustomValues] = useState<Record<string, unknown>>({});
   const { fields: customFields } = useCustomFields("client");
+  const { can } = usePermissions();
+  const toast = useToast((s) => s.toast);
 
   const fetchClients = useCallback(
     async (params: {
@@ -112,8 +116,14 @@ export default function ClientsPage() {
       setShowCreate(false);
       setCustomValues({});
       setRefreshKey((k) => k + 1);
+      toast({ title: "Client created successfully", variant: "success" });
     } catch (err) {
       console.error("[ClientsPage] Create failed:", err);
+      toast({
+        title: "Failed to create client",
+        description: err instanceof Error ? err.message : undefined,
+        variant: "error",
+      });
     } finally {
       setCreating(false);
     }
@@ -190,7 +200,7 @@ export default function ClientsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Clients</h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -198,15 +208,19 @@ export default function ClientsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <ExportDropdown entity="clients" />
-          <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
-            <Upload className="h-4 w-4" />
-            Import
-          </Button>
-          <Button onClick={() => setShowCreate(true)}>
-            <Plus className="h-4 w-4" />
-            Add Client
-          </Button>
+          {can("import-export:read") && <ExportDropdown entity="clients" />}
+          {can("import-export:create") && (
+            <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
+              <Upload className="h-4 w-4" />
+              Import
+            </Button>
+          )}
+          {can("clients:create") && (
+            <Button onClick={() => setShowCreate(true)}>
+              <Plus className="h-4 w-4" />
+              Add Client
+            </Button>
+          )}
         </div>
       </div>
 
@@ -218,6 +232,48 @@ export default function ClientsPage() {
         keyExtractor={(c) => c.id}
         onRowClick={(c) => router.push(`/clients/${c.id}`)}
         emptyMessage="No clients found. Add your first client to get started."
+        selectable={can("clients:update")}
+        bulkActions={[
+          {
+            label: "Set Active",
+            onClick: async (ids) => {
+              await apiFetch("/clients/bulk-status", {
+                method: "PATCH",
+                body: JSON.stringify({ ids, status: "ACTIVE" }),
+              });
+              toast({ title: `${ids.length} client(s) set to Active`, variant: "success" });
+            },
+          },
+          {
+            label: "Set Inactive",
+            onClick: async (ids) => {
+              await apiFetch("/clients/bulk-status", {
+                method: "PATCH",
+                body: JSON.stringify({ ids, status: "INACTIVE" }),
+              });
+              toast({ title: `${ids.length} client(s) set to Inactive`, variant: "success" });
+            },
+          },
+          ...(can("clients:delete")
+            ? [
+                {
+                  label: "Delete",
+                  icon: <Trash2 className="mr-1 h-3 w-3" />,
+                  variant: "destructive" as const,
+                  confirmTitle: "Delete clients?",
+                  confirmDescription:
+                    "This will permanently delete the selected clients. This action cannot be undone.",
+                  onClick: async (ids: string[]) => {
+                    await apiFetch("/clients/bulk", {
+                      method: "DELETE",
+                      body: JSON.stringify({ ids }),
+                    });
+                    toast({ title: `${ids.length} client(s) deleted`, variant: "success" });
+                  },
+                },
+              ]
+            : []),
+        ]}
         toolbar={
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[140px]">

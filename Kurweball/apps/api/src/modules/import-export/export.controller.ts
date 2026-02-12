@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser, CurrentUserPayload } from '../auth/decorators/current-user.decorator';
 import { ExportService } from './export.service';
 import { ExportQueryDto } from './dto/export-query.dto';
+import { RequirePermissions } from '../auth/rbac';
 
 @Controller('export')
 @UseGuards(JwtAuthGuard)
@@ -11,6 +12,7 @@ export class ExportController {
   constructor(private readonly exportService: ExportService) {}
 
   @Get('candidates')
+  @RequirePermissions('import-export:read')
   async exportCandidates(
     @Query() query: ExportQueryDto,
     @CurrentUser() user: CurrentUserPayload,
@@ -28,6 +30,7 @@ export class ExportController {
   }
 
   @Get('jobs')
+  @RequirePermissions('import-export:read')
   async exportJobs(
     @Query() query: ExportQueryDto,
     @CurrentUser() user: CurrentUserPayload,
@@ -45,6 +48,7 @@ export class ExportController {
   }
 
   @Get('clients')
+  @RequirePermissions('import-export:read')
   async exportClients(
     @Query() query: ExportQueryDto,
     @CurrentUser() user: CurrentUserPayload,
@@ -62,6 +66,7 @@ export class ExportController {
   }
 
   @Get('submissions')
+  @RequirePermissions('import-export:read')
   async exportSubmissions(
     @Query() query: ExportQueryDto,
     @CurrentUser() user: CurrentUserPayload,

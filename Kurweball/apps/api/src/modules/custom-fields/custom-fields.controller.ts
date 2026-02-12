@@ -20,6 +20,7 @@ import {
   CurrentUser,
   CurrentUserPayload,
 } from '../auth/decorators/current-user.decorator';
+import { RequirePermissions } from '../auth/rbac';
 
 @Controller('custom-fields')
 @UseGuards(JwtAuthGuard)
@@ -27,6 +28,7 @@ export class CustomFieldsController {
   constructor(private readonly customFieldsService: CustomFieldsService) {}
 
   @Get()
+  @RequirePermissions('custom-fields:read')
   async findAll(
     @CurrentUser() user: CurrentUserPayload,
     @Query() query: QueryCustomFieldsDto,
@@ -35,6 +37,7 @@ export class CustomFieldsController {
   }
 
   @Post()
+  @RequirePermissions('custom-fields:create')
   async create(
     @CurrentUser() user: CurrentUserPayload,
     @Body() dto: CreateCustomFieldDto,
@@ -43,6 +46,7 @@ export class CustomFieldsController {
   }
 
   @Patch(':id')
+  @RequirePermissions('custom-fields:update')
   async update(
     @CurrentUser() user: CurrentUserPayload,
     @Param('id') id: string,
@@ -52,6 +56,7 @@ export class CustomFieldsController {
   }
 
   @Delete(':id')
+  @RequirePermissions('custom-fields:delete')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(
     @CurrentUser() user: CurrentUserPayload,

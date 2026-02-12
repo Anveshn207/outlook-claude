@@ -18,6 +18,7 @@ import {
   CurrentUser,
   CurrentUserPayload,
 } from '../auth/decorators/current-user.decorator';
+import { RequirePermissions } from '../auth/rbac';
 
 @Controller('resumes')
 @UseGuards(JwtAuthGuard)
@@ -25,6 +26,7 @@ export class ResumesController {
   constructor(private readonly resumesService: ResumesService) {}
 
   @Post('upload/:candidateId')
+  @RequirePermissions('candidates:update')
   @UseInterceptors(FileInterceptor('file'))
   async upload(
     @CurrentUser() user: CurrentUserPayload,
@@ -40,6 +42,7 @@ export class ResumesController {
   }
 
   @Get('candidate/:candidateId')
+  @RequirePermissions('candidates:read')
   async findByCandidate(
     @CurrentUser() user: CurrentUserPayload,
     @Param('candidateId') candidateId: string,
@@ -48,6 +51,7 @@ export class ResumesController {
   }
 
   @Get(':id')
+  @RequirePermissions('candidates:read')
   async findOne(
     @CurrentUser() user: CurrentUserPayload,
     @Param('id') id: string,
@@ -56,6 +60,7 @@ export class ResumesController {
   }
 
   @Patch(':id/primary')
+  @RequirePermissions('candidates:update')
   async setPrimary(
     @CurrentUser() user: CurrentUserPayload,
     @Param('id') id: string,
@@ -64,6 +69,7 @@ export class ResumesController {
   }
 
   @Delete(':id')
+  @RequirePermissions('candidates:update')
   @HttpCode(HttpStatus.OK)
   async remove(
     @CurrentUser() user: CurrentUserPayload,

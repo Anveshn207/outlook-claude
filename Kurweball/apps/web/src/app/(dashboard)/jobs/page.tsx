@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Upload } from "lucide-react";
+import { Plus, Upload, Trash2 } from "lucide-react";
 import { ExportDropdown } from "@/components/shared/export-dropdown";
 import { ImportDialog } from "@/components/shared/import-dialog";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,8 @@ import { DataTable, Column } from "@/components/shared/data-table";
 import { CustomFieldInput } from "@/components/shared/custom-field-input";
 import { CustomFieldDisplay } from "@/components/shared/custom-field-display";
 import { useCustomFields } from "@/hooks/use-custom-fields";
+import { usePermissions } from "@/hooks/use-permissions";
+import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/api";
 
 interface Job {
@@ -77,6 +79,8 @@ export default function JobsPage() {
   const [customValues, setCustomValues] = useState<Record<string, unknown>>({});
   const { fields: customFields } = useCustomFields("job");
   const [showImport, setShowImport] = useState(false);
+  const { can } = usePermissions();
+  const toast = useToast((s) => s.toast);
   const [clients, setClients] = useState<ClientOption[]>([]);
 
   useEffect(() => {
@@ -138,8 +142,14 @@ export default function JobsPage() {
       setShowCreate(false);
       setCustomValues({});
       setRefreshKey((k) => k + 1);
+      toast({ title: "Job created successfully", variant: "success" });
     } catch (err) {
       console.error("[JobsPage] Create failed:", err);
+      toast({
+        title: "Failed to create job",
+        description: err instanceof Error ? err.message : undefined,
+        variant: "error",
+      });
     } finally {
       setCreating(false);
     }
@@ -194,6 +204,7 @@ export default function JobsPage() {
       {
         key: "location",
         header: "Location",
+        hideOnMobile: true,
         render: (j) => (
           <span className="text-muted-foreground">{j.location ?? "-"}</span>
         ),
@@ -233,7 +244,7 @@ export default function JobsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Jobs</h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -241,15 +252,19 @@ export default function JobsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <ExportDropdown entity="jobs" />
-          <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
-            <Upload className="h-4 w-4" />
-            Import
-          </Button>
-          <Button onClick={() => setShowCreate(true)}>
-            <Plus className="h-4 w-4" />
-            Add Job
-          </Button>
+          {can("import-export:read") && <ExportDropdown entity="jobs" />}
+          {can("import-export:create") && (
+            <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
+              <Upload className="h-4 w-4" />
+              Import
+            </Button>
+          )}
+          {can("jobs:create") && (
+            <Button onClick={() => setShowCreate(true)}>
+              <Plus className="h-4 w-4" />
+              Add Job
+            </Button>
+          )}
         </div>
       </div>
 
@@ -261,6 +276,58 @@ export default function JobsPage() {
         keyExtractor={(j) => j.id}
         onRowClick={(j) => router.push(`/jobs/${j.id}`)}
         emptyMessage="No jobs found. Create your first job to get started."
+        selectable={can("jobs:update")}
+        bulkActions={[
+          {
+            label: "Set Open",
+            onClick: async (ids) => {
+              await apiFetch("/jobs/bulk-status", {
+                method: "PATCH",
+                body: JSON.stringify({ ids, status: "OPEN" }),
+              });
+              toast({ title: `${ids.length} job(s) set to Open`, variant: "success" });
+            },
+          },
+          {
+            label: "Set On Hold",
+            onClick: async (ids) => {
+              await apiFetch("/jobs/bulk-status", {
+                method: "PATCH",
+                body: JSON.stringify({ ids, status: "ON_HOLD" }),
+              });
+              toast({ title: `${ids.length} job(s) set to On Hold`, variant: "success" });
+            },
+          },
+          {
+            label: "Set Closed",
+            onClick: async (ids) => {
+              await apiFetch("/jobs/bulk-status", {
+                method: "PATCH",
+                body: JSON.stringify({ ids, status: "CLOSED" }),
+              });
+              toast({ title: `${ids.length} job(s) set to Closed`, variant: "success" });
+            },
+          },
+          ...(can("jobs:delete")
+            ? [
+                {
+                  label: "Delete",
+                  icon: <Trash2 className="mr-1 h-3 w-3" />,
+                  variant: "destructive" as const,
+                  confirmTitle: "Delete jobs?",
+                  confirmDescription:
+                    "This will permanently delete the selected jobs. This action cannot be undone.",
+                  onClick: async (ids: string[]) => {
+                    await apiFetch("/jobs/bulk", {
+                      method: "DELETE",
+                      body: JSON.stringify({ ids }),
+                    });
+                    toast({ title: `${ids.length} job(s) deleted`, variant: "success" });
+                  },
+                },
+              ]
+            : []),
+        ]}
         toolbar={
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[140px]">

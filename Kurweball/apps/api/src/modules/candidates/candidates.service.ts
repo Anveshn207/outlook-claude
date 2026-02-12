@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { CandidateStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCandidateDto } from './dto/create-candidate.dto';
 import { UpdateCandidateDto } from './dto/update-candidate.dto';
@@ -159,5 +159,22 @@ export class CandidatesService {
     return this.prisma.candidate.delete({
       where: { id },
     });
+  }
+
+  async bulkUpdateStatus(tenantId: string, ids: string[], status: CandidateStatus) {
+    const result = await this.prisma.candidate.updateMany({
+      where: { id: { in: ids }, tenantId },
+      data: { status },
+    });
+    console.log(`[CandidatesService] bulkUpdateStatus count=${result.count} status=${status}`);
+    return { updated: result.count };
+  }
+
+  async bulkDelete(tenantId: string, ids: string[]) {
+    const result = await this.prisma.candidate.deleteMany({
+      where: { id: { in: ids }, tenantId },
+    });
+    console.log(`[CandidatesService] bulkDelete count=${result.count}`);
+    return { deleted: result.count };
   }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Pencil, Trash2, X } from "lucide-react";
+import { Plus, Pencil, Trash2, X, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
+import { usePermissions } from "@/hooks/use-permissions";
 
 // ---------------------------------------------------------------------------
 // Types & constants
@@ -116,6 +117,7 @@ const emptyForm: FieldFormData = {
 // ---------------------------------------------------------------------------
 
 export default function SettingsPage() {
+  const { can } = usePermissions();
   const [activeTab, setActiveTab] = useState("custom-fields");
 
   // Custom fields state
@@ -281,6 +283,18 @@ export default function SettingsPage() {
   const showOptionsEditor =
     form.fieldType === "SELECT" || form.fieldType === "MULTI_SELECT";
 
+  if (!can("settings:read")) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <ShieldAlert className="h-16 w-16 text-muted-foreground/50 mb-4" />
+        <h2 className="text-xl font-semibold text-foreground">Access Denied</h2>
+        <p className="mt-2 text-sm text-muted-foreground max-w-md">
+          You don&apos;t have permission to access settings.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -338,10 +352,12 @@ export default function SettingsPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Button onClick={openAddDialog}>
-                <Plus className="mr-1 h-4 w-4" />
-                Add Custom Field
-              </Button>
+              {can("custom-fields:create") && (
+                <Button onClick={openAddDialog}>
+                  <Plus className="mr-1 h-4 w-4" />
+                  Add Custom Field
+                </Button>
+              )}
             </div>
           </div>
 
@@ -447,24 +463,28 @@ export default function SettingsPage() {
                           </td>
                           <td className="px-4 py-3 text-right">
                             <div className="flex items-center justify-end gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => openEditDialog(field)}
-                              >
-                                <Pencil className="h-4 w-4" />
-                                <span className="sr-only">Edit</span>
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-destructive hover:text-destructive"
-                                onClick={() => handleDelete(field)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                <span className="sr-only">Delete</span>
-                              </Button>
+                              {can("custom-fields:update") && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => openEditDialog(field)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                  <span className="sr-only">Edit</span>
+                                </Button>
+                              )}
+                              {can("custom-fields:delete") && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-destructive hover:text-destructive"
+                                  onClick={() => handleDelete(field)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  <span className="sr-only">Delete</span>
+                                </Button>
+                              )}
                             </div>
                           </td>
                         </tr>

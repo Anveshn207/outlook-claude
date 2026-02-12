@@ -8,6 +8,8 @@ import {
   Param,
   Query,
   UseGuards,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
@@ -18,8 +20,11 @@ import { ClientsService } from './clients.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { QueryClientsDto } from './dto/query-clients.dto';
+import { BulkStatusClientsDto } from './dto/bulk-status.dto';
+import { BulkDeleteClientsDto } from './dto/bulk-delete.dto';
 import { CreateContactDto } from './dto/create-contact.dto';
 import { UpdateContactDto } from './dto/update-contact.dto';
+import { RequirePermissions } from '../auth/rbac';
 
 @Controller('clients')
 @UseGuards(JwtAuthGuard)
@@ -29,6 +34,7 @@ export class ClientsController {
   // ─── Client Endpoints ─────────────────────────────────────────────────────
 
   @Get()
+  @RequirePermissions('clients:read')
   findAll(
     @CurrentUser() user: CurrentUserPayload,
     @Query() query: QueryClientsDto,
@@ -37,6 +43,7 @@ export class ClientsController {
   }
 
   @Post()
+  @RequirePermissions('clients:create')
   create(
     @CurrentUser() user: CurrentUserPayload,
     @Body() dto: CreateClientDto,
@@ -44,7 +51,27 @@ export class ClientsController {
     return this.clientsService.create(user.tenantId, user.id, dto);
   }
 
+  @Patch('bulk-status')
+  @RequirePermissions('clients:update')
+  bulkUpdateStatus(
+    @CurrentUser() user: CurrentUserPayload,
+    @Body() dto: BulkStatusClientsDto,
+  ) {
+    return this.clientsService.bulkUpdateStatus(user.tenantId, dto.ids, dto.status);
+  }
+
+  @Delete('bulk')
+  @RequirePermissions('clients:delete')
+  @HttpCode(HttpStatus.OK)
+  bulkDelete(
+    @CurrentUser() user: CurrentUserPayload,
+    @Body() dto: BulkDeleteClientsDto,
+  ) {
+    return this.clientsService.bulkDelete(user.tenantId, dto.ids);
+  }
+
   @Get(':id')
+  @RequirePermissions('clients:read')
   findOne(
     @CurrentUser() user: CurrentUserPayload,
     @Param('id') id: string,
@@ -53,6 +80,7 @@ export class ClientsController {
   }
 
   @Patch(':id')
+  @RequirePermissions('clients:update')
   update(
     @CurrentUser() user: CurrentUserPayload,
     @Param('id') id: string,
@@ -62,6 +90,7 @@ export class ClientsController {
   }
 
   @Delete(':id')
+  @RequirePermissions('clients:delete')
   remove(
     @CurrentUser() user: CurrentUserPayload,
     @Param('id') id: string,
@@ -72,6 +101,7 @@ export class ClientsController {
   // ─── Contact Endpoints ────────────────────────────────────────────────────
 
   @Post(':clientId/contacts')
+  @RequirePermissions('clients:create')
   createContact(
     @CurrentUser() user: CurrentUserPayload,
     @Param('clientId') clientId: string,
@@ -81,6 +111,7 @@ export class ClientsController {
   }
 
   @Patch(':clientId/contacts/:contactId')
+  @RequirePermissions('clients:update')
   updateContact(
     @CurrentUser() user: CurrentUserPayload,
     @Param('clientId') clientId: string,
@@ -96,6 +127,7 @@ export class ClientsController {
   }
 
   @Delete(':clientId/contacts/:contactId')
+  @RequirePermissions('clients:delete')
   removeContact(
     @CurrentUser() user: CurrentUserPayload,
     @Param('clientId') clientId: string,

@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Upload } from "lucide-react";
+import { Plus, Upload, Trash2 } from "lucide-react";
 import { ExportDropdown } from "@/components/shared/export-dropdown";
 import { ImportDialog } from "@/components/shared/import-dialog";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,8 @@ import { DataTable, Column } from "@/components/shared/data-table";
 import { CustomFieldInput } from "@/components/shared/custom-field-input";
 import { CustomFieldDisplay } from "@/components/shared/custom-field-display";
 import { useCustomFields } from "@/hooks/use-custom-fields";
+import { usePermissions } from "@/hooks/use-permissions";
+import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/api";
 
 interface Candidate {
@@ -70,6 +72,8 @@ export default function CandidatesPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [customValues, setCustomValues] = useState<Record<string, unknown>>({});
   const { fields: customFields } = useCustomFields("candidate");
+  const { can } = usePermissions();
+  const toast = useToast((s) => s.toast);
 
   const fetchCandidates = useCallback(
     async (params: {
@@ -125,8 +129,14 @@ export default function CandidatesPage() {
       setShowCreate(false);
       setCustomValues({});
       setRefreshKey((k) => k + 1);
+      toast({ title: "Candidate created successfully", variant: "success" });
     } catch (err) {
       console.error("[CandidatesPage] Create failed:", err);
+      toast({
+        title: "Failed to create candidate",
+        description: err instanceof Error ? err.message : undefined,
+        variant: "error",
+      });
     } finally {
       setCreating(false);
     }
@@ -147,6 +157,7 @@ export default function CandidatesPage() {
       {
         key: "email",
         header: "Email",
+        hideOnMobile: true,
         render: (c) => (
           <span className="text-muted-foreground">{c.email ?? "-"}</span>
         ),
@@ -180,6 +191,7 @@ export default function CandidatesPage() {
       {
         key: "location",
         header: "Location",
+        hideOnMobile: true,
         render: (c) => (
           <span className="text-muted-foreground">{c.location ?? "-"}</span>
         ),
@@ -219,7 +231,7 @@ export default function CandidatesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Candidates</h2>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -227,15 +239,19 @@ export default function CandidatesPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <ExportDropdown entity="candidates" />
-          <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
-            <Upload className="h-4 w-4" />
-            Import
-          </Button>
-          <Button onClick={() => setShowCreate(true)}>
-            <Plus className="h-4 w-4" />
-            Add Candidate
-          </Button>
+          {can("import-export:read") && <ExportDropdown entity="candidates" />}
+          {can("import-export:create") && (
+            <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
+              <Upload className="h-4 w-4" />
+              Import
+            </Button>
+          )}
+          {can("candidates:create") && (
+            <Button onClick={() => setShowCreate(true)}>
+              <Plus className="h-4 w-4" />
+              Add Candidate
+            </Button>
+          )}
         </div>
       </div>
 
@@ -247,6 +263,58 @@ export default function CandidatesPage() {
         keyExtractor={(c) => c.id}
         onRowClick={(c) => router.push(`/candidates/${c.id}`)}
         emptyMessage="No candidates found. Add your first candidate to get started."
+        selectable={can("candidates:update")}
+        bulkActions={[
+          {
+            label: "Set Active",
+            onClick: async (ids) => {
+              await apiFetch("/candidates/bulk-status", {
+                method: "PATCH",
+                body: JSON.stringify({ ids, status: "ACTIVE" }),
+              });
+              toast({ title: `${ids.length} candidate(s) set to Active`, variant: "success" });
+            },
+          },
+          {
+            label: "Set Passive",
+            onClick: async (ids) => {
+              await apiFetch("/candidates/bulk-status", {
+                method: "PATCH",
+                body: JSON.stringify({ ids, status: "PASSIVE" }),
+              });
+              toast({ title: `${ids.length} candidate(s) set to Passive`, variant: "success" });
+            },
+          },
+          {
+            label: "Set DND",
+            onClick: async (ids) => {
+              await apiFetch("/candidates/bulk-status", {
+                method: "PATCH",
+                body: JSON.stringify({ ids, status: "DND" }),
+              });
+              toast({ title: `${ids.length} candidate(s) set to DND`, variant: "success" });
+            },
+          },
+          ...(can("candidates:delete")
+            ? [
+                {
+                  label: "Delete",
+                  icon: <Trash2 className="mr-1 h-3 w-3" />,
+                  variant: "destructive" as const,
+                  confirmTitle: "Delete candidates?",
+                  confirmDescription:
+                    "This will permanently delete the selected candidates. This action cannot be undone.",
+                  onClick: async (ids: string[]) => {
+                    await apiFetch("/candidates/bulk", {
+                      method: "DELETE",
+                      body: JSON.stringify({ ids }),
+                    });
+                    toast({ title: `${ids.length} candidate(s) deleted`, variant: "success" });
+                  },
+                },
+              ]
+            : []),
+        ]}
         toolbar={
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[140px]">

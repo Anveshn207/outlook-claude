@@ -333,7 +333,7 @@ export default function PipelinePage() {
         <div className="flex items-center gap-3">
           {/* Job selector */}
           <Select value={selectedJobId} onValueChange={setSelectedJobId}>
-            <SelectTrigger className="w-72">
+            <SelectTrigger className="w-full sm:w-72">
               <SelectValue placeholder="Select a job..." />
             </SelectTrigger>
             <SelectContent>
@@ -365,7 +365,7 @@ export default function PipelinePage() {
             const isOver = dragOverStage === stage.id;
 
             return (
-              <div key={stage.id} className="flex w-64 shrink-0 flex-col">
+              <div key={stage.id} className="flex w-[280px] shrink-0 flex-col">
                 {/* Column header */}
                 <div
                   className={`flex items-center gap-2 rounded-t-lg px-3 py-2.5 ${colors.bg}`}

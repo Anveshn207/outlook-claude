@@ -168,7 +168,8 @@ model User {
   lastName     String
   role         UserRole @default(RECRUITER)
   avatarUrl    String?
-  isActive     Boolean  @default(true)
+  isActive            Boolean  @default(true)
+  emailNotifications  Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

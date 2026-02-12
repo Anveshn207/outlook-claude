@@ -16,6 +16,7 @@ import { ImportService } from './import.service';
 import { UploadImportDto } from './dto/upload-import.dto';
 import { AnalyzeMappingDto } from './dto/analyze-mapping.dto';
 import { ExecuteImportDto } from './dto/execute-import.dto';
+import { RequirePermissions } from '../auth/rbac';
 
 @Controller('import')
 @UseGuards(JwtAuthGuard)
@@ -23,6 +24,7 @@ export class ImportController {
   constructor(private readonly importService: ImportService) {}
 
   @Post('upload')
+  @RequirePermissions('import-export:create')
   @UseInterceptors(FileInterceptor('file'))
   upload(
     @UploadedFile() file: Express.Multer.File,
@@ -37,6 +39,7 @@ export class ImportController {
   }
 
   @Post('analyze')
+  @RequirePermissions('import-export:create')
   analyze(@Body() dto: AnalyzeMappingDto) {
     return this.importService.analyzeMappings(
       dto.entityType,
@@ -46,6 +49,7 @@ export class ImportController {
   }
 
   @Post('execute')
+  @RequirePermissions('import-export:create')
   execute(
     @Body() dto: ExecuteImportDto,
     @CurrentUser() user: CurrentUserPayload,

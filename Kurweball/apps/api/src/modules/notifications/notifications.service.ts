@@ -2,10 +2,16 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, NotificationType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { QueryNotificationsDto } from './dto/query-notifications.dto';
+import { NotificationSseService } from './notification-sse.service';
+import { EmailNotificationService } from './email-notification.service';
 
 @Injectable()
 export class NotificationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly sseService: NotificationSseService,
+    private readonly emailService: EmailNotificationService,
+  ) {}
 
   async findAll(tenantId: string, userId: string, query: QueryNotificationsDto) {
     const { page = 1, limit = 25, isRead } = query;
@@ -111,6 +117,21 @@ export class NotificationsService {
     console.log(
       `[NotificationsService] created notification=${notification.id} type=${data.type} tenant=${data.tenantId} user=${data.userId}`,
     );
+
+    // Push real-time SSE notification
+    this.sseService.pushToUser(data.userId, notification);
+
+    // Dispatch email notification (fire-and-forget)
+    this.emailService.sendNotificationEmail({
+      userId: data.userId,
+      tenantId: data.tenantId,
+      type: data.type,
+      title: data.title,
+      message: data.message,
+      link: data.link,
+    }).catch((err) => {
+      console.error('[NotificationsService] Email dispatch failed:', err);
+    });
 
     return notification;
   }

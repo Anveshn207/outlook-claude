@@ -21,6 +21,7 @@ import {
   CurrentUser,
   CurrentUserPayload,
 } from '../auth/decorators/current-user.decorator';
+import { RequirePermissions } from '../auth/rbac';
 
 @Controller('submissions')
 @UseGuards(JwtAuthGuard)
@@ -28,6 +29,7 @@ export class SubmissionsController {
   constructor(private readonly submissionsService: SubmissionsService) {}
 
   @Get()
+  @RequirePermissions('submissions:read')
   async findAll(
     @CurrentUser() user: CurrentUserPayload,
     @Query() query: QuerySubmissionsDto,
@@ -36,6 +38,7 @@ export class SubmissionsController {
   }
 
   @Post()
+  @RequirePermissions('submissions:create')
   async create(
     @CurrentUser() user: CurrentUserPayload,
     @Body() dto: CreateSubmissionDto,
@@ -44,6 +47,7 @@ export class SubmissionsController {
   }
 
   @Get(':id')
+  @RequirePermissions('submissions:read')
   async findOne(
     @CurrentUser() user: CurrentUserPayload,
     @Param('id') id: string,
@@ -52,6 +56,7 @@ export class SubmissionsController {
   }
 
   @Patch(':id')
+  @RequirePermissions('submissions:update')
   async update(
     @CurrentUser() user: CurrentUserPayload,
     @Param('id') id: string,
@@ -61,6 +66,7 @@ export class SubmissionsController {
   }
 
   @Patch(':id/stage')
+  @RequirePermissions('pipeline:update')
   async moveStage(
     @CurrentUser() user: CurrentUserPayload,
     @Param('id') id: string,
@@ -70,6 +76,7 @@ export class SubmissionsController {
   }
 
   @Delete(':id')
+  @RequirePermissions('submissions:delete')
   @HttpCode(HttpStatus.OK)
   async remove(
     @CurrentUser() user: CurrentUserPayload,

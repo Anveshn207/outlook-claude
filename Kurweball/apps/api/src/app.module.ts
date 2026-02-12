@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CandidatesModule } from './modules/candidates/candidates.module';
@@ -18,6 +19,8 @@ import { SavedViewsModule } from './modules/saved-views/saved-views.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { UsersModule } from './modules/users/users.module';
 import { ImportExportModule } from './modules/import-export/import-export.module';
+import { HealthModule } from './modules/health/health.module';
+import { RolesGuard } from './modules/auth/rbac/roles.guard';
 
 @Module({
   imports: [
@@ -43,6 +46,8 @@ import { ImportExportModule } from './modules/import-export/import-export.module
     NotificationsModule,
     UsersModule,
     ImportExportModule,
+    HealthModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: RolesGuard }],
 })
 export class AppModule {}

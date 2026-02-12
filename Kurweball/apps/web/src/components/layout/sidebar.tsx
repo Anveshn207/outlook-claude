@@ -20,19 +20,21 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
+import { usePermissions } from "@/hooks/use-permissions";
+import type { Permission } from "@/lib/permissions";
 
-const navigation = [
+const navigation: { name: string; href: string; icon: typeof LayoutDashboard; permission?: Permission }[] = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Candidates", href: "/candidates", icon: Users },
-  { name: "Jobs", href: "/jobs", icon: Briefcase },
-  { name: "Clients", href: "/clients", icon: Building2 },
-  { name: "Pipeline", href: "/pipeline", icon: Kanban },
-  { name: "Interviews", href: "/interviews", icon: CalendarDays },
-  { name: "Tasks", href: "/tasks", icon: ClipboardList },
-  { name: "Reports", href: "/reports", icon: BarChart3 },
-  { name: "Import", href: "/import", icon: Upload },
-  { name: "Team", href: "/team", icon: UsersRound },
-  { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Candidates", href: "/candidates", icon: Users, permission: "candidates:read" },
+  { name: "Jobs", href: "/jobs", icon: Briefcase, permission: "jobs:read" },
+  { name: "Clients", href: "/clients", icon: Building2, permission: "clients:read" },
+  { name: "Pipeline", href: "/pipeline", icon: Kanban, permission: "pipeline:read" },
+  { name: "Interviews", href: "/interviews", icon: CalendarDays, permission: "interviews:read" },
+  { name: "Tasks", href: "/tasks", icon: ClipboardList, permission: "tasks:read" },
+  { name: "Reports", href: "/reports", icon: BarChart3, permission: "reports:read" },
+  { name: "Import", href: "/import", icon: Upload, permission: "import-export:create" },
+  { name: "Team", href: "/team", icon: UsersRound, permission: "users:read" },
+  { name: "Settings", href: "/settings", icon: Settings, permission: "settings:read" },
 ];
 
 interface SidebarProps {
@@ -43,6 +45,11 @@ interface SidebarProps {
 export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
+  const { can } = usePermissions();
+
+  const filteredNavigation = navigation.filter(
+    (item) => !item.permission || can(item.permission),
+  );
 
   const initials = user
     ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`
@@ -85,7 +92,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-1 px-3 py-4">
-          {navigation.map((item) => {
+          {filteredNavigation.map((item) => {
             const isActive =
               pathname === item.href ||
               (item.href !== "/dashboard" && pathname.startsWith(item.href));

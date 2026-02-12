@@ -1,10 +1,10 @@
 import { create } from "zustand";
 
-interface Toast {
+export interface Toast {
   id: string;
   title: string;
   description?: string;
-  variant?: "default" | "success" | "error";
+  variant?: "default" | "success" | "error" | "warning";
 }
 
 interface ToastStore {

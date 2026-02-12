@@ -384,14 +384,14 @@ export default function InterviewsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Interviews</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Schedule and manage candidate interviews.
           </p>
         </div>
-        <Button onClick={() => setShowCreate(true)}>
+        <Button onClick={() => setShowCreate(true)} className="w-fit">
           <Plus className="h-4 w-4" />
           Schedule Interview
         </Button>

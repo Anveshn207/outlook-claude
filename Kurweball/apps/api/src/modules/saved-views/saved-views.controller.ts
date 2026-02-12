@@ -20,6 +20,7 @@ import {
   CurrentUser,
   CurrentUserPayload,
 } from '../auth/decorators/current-user.decorator';
+import { RequirePermissions } from '../auth/rbac';
 
 @Controller('saved-views')
 @UseGuards(JwtAuthGuard)
@@ -27,6 +28,7 @@ export class SavedViewsController {
   constructor(private readonly savedViewsService: SavedViewsService) {}
 
   @Get()
+  @RequirePermissions('saved-views:read')
   async findAll(
     @CurrentUser() user: CurrentUserPayload,
     @Query() query: QuerySavedViewsDto,
@@ -35,6 +37,7 @@ export class SavedViewsController {
   }
 
   @Post()
+  @RequirePermissions('saved-views:create')
   async create(
     @CurrentUser() user: CurrentUserPayload,
     @Body() dto: CreateSavedViewDto,
@@ -43,6 +46,7 @@ export class SavedViewsController {
   }
 
   @Patch(':id')
+  @RequirePermissions('saved-views:update')
   async update(
     @CurrentUser() user: CurrentUserPayload,
     @Param('id') id: string,
@@ -52,6 +56,7 @@ export class SavedViewsController {
   }
 
   @Delete(':id')
+  @RequirePermissions('saved-views:delete')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(
     @CurrentUser() user: CurrentUserPayload,

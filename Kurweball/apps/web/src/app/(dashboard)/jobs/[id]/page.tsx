@@ -306,9 +306,9 @@ export default function JobDetailPage() {
           <ArrowLeft className="h-4 w-4" /> Back to Jobs
         </Button>
 
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <h2 className="text-2xl font-bold text-foreground">
                 {job.title}
               </h2>
@@ -319,7 +319,7 @@ export default function JobDetailPage() {
                 {job.status.replace("_", " ")}
               </Badge>
             </div>
-            <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
+            <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
               <span className="flex items-center gap-1">
                 <Building2 className="h-3.5 w-3.5" />
                 {job.client.name}
@@ -714,7 +714,7 @@ export default function JobDetailPage() {
 
       {/* Submissions section */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h3 className="text-lg font-semibold text-foreground">
             Submissions
             {job._count.submissions > 0 && (

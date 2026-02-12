@@ -223,16 +223,16 @@ export default function ClientDetailPage() {
           <ArrowLeft className="h-4 w-4" /> Back to Clients
         </Button>
 
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
               <Building2 className="h-8 w-8" />
             </div>
             <div>
               <h2 className="text-2xl font-bold text-foreground">
                 {client.name}
               </h2>
-              <div className="mt-1 flex items-center gap-3 text-sm text-muted-foreground">
+              <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                 {client.industry && (
                   <span className="flex items-center gap-1">
                     <Briefcase className="h-3.5 w-3.5" />
@@ -275,7 +275,7 @@ export default function ClientDetailPage() {
                 Add Contact
               </Button>
             </CardHeader>
-            <CardContent className="p-0">
+            <CardContent className="overflow-x-auto p-0">
               {client.contacts.length === 0 ? (
                 <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
                   No contacts yet. Add the first contact for this client.
@@ -351,7 +351,7 @@ export default function ClientDetailPage() {
                 Jobs ({client.jobs.length})
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-0">
+            <CardContent className="overflow-x-auto p-0">
               {client.jobs.length === 0 ? (
                 <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
                   No jobs linked to this client yet.

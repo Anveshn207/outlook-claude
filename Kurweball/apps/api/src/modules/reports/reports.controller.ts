@@ -6,6 +6,7 @@ import {
   CurrentUser,
   CurrentUserPayload,
 } from '../auth/decorators/current-user.decorator';
+import { RequirePermissions } from '../auth/rbac';
 
 @Controller('reports')
 @UseGuards(JwtAuthGuard)
@@ -13,16 +14,19 @@ export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
   @Get('dashboard')
+  @RequirePermissions('reports:read')
   async getDashboardStats(@CurrentUser() user: CurrentUserPayload) {
     return this.reportsService.getDashboardStats(user.tenantId);
   }
 
   @Get('submissions-by-recruiter')
+  @RequirePermissions('reports:read')
   async getSubmissionsByRecruiter(@CurrentUser() user: CurrentUserPayload) {
     return this.reportsService.getSubmissionsByRecruiter(user.tenantId);
   }
 
   @Get('pipeline-funnel')
+  @RequirePermissions('reports:read')
   async getPipelineFunnel(
     @CurrentUser() user: CurrentUserPayload,
     @Query('jobId') jobId?: string,
@@ -31,26 +35,31 @@ export class ReportsController {
   }
 
   @Get('jobs-overview')
+  @RequirePermissions('reports:read')
   async getJobsOverview(@CurrentUser() user: CurrentUserPayload) {
     return this.reportsService.getJobsOverview(user.tenantId);
   }
 
   @Get('time-to-hire')
+  @RequirePermissions('reports:read')
   async getTimeToHire(@CurrentUser() user: CurrentUserPayload) {
     return this.reportsService.getTimeToHire(user.tenantId);
   }
 
   @Get('source-effectiveness')
+  @RequirePermissions('reports:read')
   async getSourceEffectiveness(@CurrentUser() user: CurrentUserPayload) {
     return this.reportsService.getSourceEffectiveness(user.tenantId);
   }
 
   @Get('pipeline-velocity')
+  @RequirePermissions('reports:read')
   async getPipelineVelocity(@CurrentUser() user: CurrentUserPayload) {
     return this.reportsService.getPipelineVelocity(user.tenantId);
   }
 
   @Get('export/candidates')
+  @RequirePermissions('reports:read')
   async exportCandidatesCsv(
     @CurrentUser() user: CurrentUserPayload,
     @Res() res: Response,
@@ -62,6 +71,7 @@ export class ReportsController {
   }
 
   @Get('export/submissions')
+  @RequirePermissions('reports:read')
   async exportSubmissionsCsv(
     @CurrentUser() user: CurrentUserPayload,
     @Res() res: Response,

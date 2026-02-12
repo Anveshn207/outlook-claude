@@ -16,6 +16,7 @@ import {
   CurrentUser,
   CurrentUserPayload,
 } from '../auth/decorators/current-user.decorator';
+import { RequirePermissions } from '../auth/rbac';
 
 @Controller('activities')
 @UseGuards(JwtAuthGuard)
@@ -23,6 +24,7 @@ export class ActivitiesController {
   constructor(private readonly activitiesService: ActivitiesService) {}
 
   @Get()
+  @RequirePermissions('activities:read')
   async findAll(
     @CurrentUser() user: CurrentUserPayload,
     @Query() query: QueryActivitiesDto,
@@ -31,6 +33,7 @@ export class ActivitiesController {
   }
 
   @Get('recent')
+  @RequirePermissions('activities:read')
   async findRecent(
     @CurrentUser() user: CurrentUserPayload,
     @Query('limit') limit?: string,
@@ -40,6 +43,7 @@ export class ActivitiesController {
   }
 
   @Post()
+  @RequirePermissions('activities:create')
   async create(
     @CurrentUser() user: CurrentUserPayload,
     @Body() dto: CreateActivityDto,
@@ -48,6 +52,7 @@ export class ActivitiesController {
   }
 
   @Delete(':id')
+  @RequirePermissions('activities:create')
   async remove(
     @CurrentUser() user: CurrentUserPayload,
     @Param('id') id: string,

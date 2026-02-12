@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DataTable, Column } from "@/components/shared/data-table";
 import { apiFetch } from "@/lib/api";
-import { useAuthStore } from "@/stores/auth-store";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface UserRow {
   id: string;
@@ -44,7 +44,7 @@ const roleColors: Record<string, string> = {
 };
 
 export default function TeamPage() {
-  const { user } = useAuthStore();
+  const { can } = usePermissions();
   const [showInvite, setShowInvite] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [editingUser, setEditingUser] = useState<UserRow | null>(null);
@@ -58,13 +58,13 @@ export default function TeamPage() {
   const [editRole, setEditRole] = useState("RECRUITER");
   const [editActive, setEditActive] = useState("true");
 
-  if (user?.role !== "ADMIN") {
+  if (!can("users:read")) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
         <ShieldAlert className="h-16 w-16 text-muted-foreground/50 mb-4" />
         <h2 className="text-xl font-semibold text-foreground">Access Denied</h2>
         <p className="mt-2 text-sm text-muted-foreground max-w-md">
-          You need administrator privileges to access team management.
+          You don&apos;t have permission to access team management.
         </p>
       </div>
     );
@@ -211,23 +211,27 @@ export default function TeamPage() {
         </span>
       ),
     },
-    {
-      key: "actions",
-      header: "",
-      render: (u) => (
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-7 text-xs"
-          onClick={(e) => {
-            e.stopPropagation();
-            openEditDialog(u);
-          }}
-        >
-          Edit
-        </Button>
-      ),
-    },
+    ...(can("users:update")
+      ? [
+          {
+            key: "actions" as const,
+            header: "",
+            render: (u: UserRow) => (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 text-xs"
+                onClick={(e: React.MouseEvent) => {
+                  e.stopPropagation();
+                  openEditDialog(u);
+                }}
+              >
+                Edit
+              </Button>
+            ),
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -239,10 +243,12 @@ export default function TeamPage() {
             Manage your team members and their access levels.
           </p>
         </div>
-        <Button onClick={() => setShowInvite(true)}>
-          <UserPlus className="h-4 w-4" />
-          Invite User
-        </Button>
+        {can("users:create") && (
+          <Button onClick={() => setShowInvite(true)}>
+            <UserPlus className="h-4 w-4" />
+            Invite User
+          </Button>
+        )}
       </div>
 
       <DataTable

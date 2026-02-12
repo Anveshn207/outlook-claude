@@ -20,6 +20,7 @@ import {
   CurrentUser,
   CurrentUserPayload,
 } from '../auth/decorators/current-user.decorator';
+import { RequirePermissions } from '../auth/rbac';
 
 @Controller('tasks')
 @UseGuards(JwtAuthGuard)
@@ -27,6 +28,7 @@ export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
   @Get()
+  @RequirePermissions('tasks:read')
   async findAll(
     @CurrentUser() user: CurrentUserPayload,
     @Query() query: QueryTasksDto,
@@ -35,6 +37,7 @@ export class TasksController {
   }
 
   @Get('upcoming')
+  @RequirePermissions('tasks:read')
   async getUpcoming(
     @CurrentUser() user: CurrentUserPayload,
     @Query('limit') limit?: number,
@@ -46,6 +49,7 @@ export class TasksController {
   }
 
   @Post()
+  @RequirePermissions('tasks:create')
   async create(
     @CurrentUser() user: CurrentUserPayload,
     @Body() dto: CreateTaskDto,
@@ -54,6 +58,7 @@ export class TasksController {
   }
 
   @Get(':id')
+  @RequirePermissions('tasks:read')
   async findOne(
     @CurrentUser() user: CurrentUserPayload,
     @Param('id') id: string,
@@ -62,6 +67,7 @@ export class TasksController {
   }
 
   @Patch(':id')
+  @RequirePermissions('tasks:update')
   async update(
     @CurrentUser() user: CurrentUserPayload,
     @Param('id') id: string,
@@ -71,6 +77,7 @@ export class TasksController {
   }
 
   @Patch(':id/complete')
+  @RequirePermissions('tasks:update')
   async complete(
     @CurrentUser() user: CurrentUserPayload,
     @Param('id') id: string,
@@ -79,6 +86,7 @@ export class TasksController {
   }
 
   @Delete(':id')
+  @RequirePermissions('tasks:delete')
   @HttpCode(HttpStatus.OK)
   async remove(
     @CurrentUser() user: CurrentUserPayload,

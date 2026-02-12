@@ -3,7 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { JobStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
@@ -225,5 +225,22 @@ export class JobsService {
     await this.prisma.job.delete({ where: { id } });
 
     return { deleted: true };
+  }
+
+  async bulkUpdateStatus(tenantId: string, ids: string[], status: JobStatus) {
+    const result = await this.prisma.job.updateMany({
+      where: { id: { in: ids }, tenantId },
+      data: { status },
+    });
+    console.log(`[JobsService] bulkUpdateStatus count=${result.count} status=${status}`);
+    return { updated: result.count };
+  }
+
+  async bulkDelete(tenantId: string, ids: string[]) {
+    const result = await this.prisma.job.deleteMany({
+      where: { id: { in: ids }, tenantId },
+    });
+    console.log(`[JobsService] bulkDelete count=${result.count}`);
+    return { deleted: result.count };
   }
 }

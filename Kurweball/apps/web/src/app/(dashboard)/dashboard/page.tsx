@@ -151,7 +151,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 overflow-hidden">
       {/* Welcome */}
       <div>
         <h2 className="text-2xl font-bold text-foreground">
@@ -196,7 +196,7 @@ export default function DashboardPage() {
 
       {/* Secondary stats row */}
       {!loading && stats && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {secondaryStats.map((s) => (
             <Card key={s.label}>
               <CardContent className="p-4 text-center">

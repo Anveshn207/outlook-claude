@@ -20,6 +20,7 @@ import {
   CurrentUser,
   CurrentUserPayload,
 } from '../auth/decorators/current-user.decorator';
+import { RequirePermissions } from '../auth/rbac';
 
 @Controller('interviews')
 @UseGuards(JwtAuthGuard)
@@ -27,6 +28,7 @@ export class InterviewsController {
   constructor(private readonly interviewsService: InterviewsService) {}
 
   @Get()
+  @RequirePermissions('interviews:read')
   async findAll(
     @CurrentUser() user: CurrentUserPayload,
     @Query() query: QueryInterviewsDto,
@@ -35,6 +37,7 @@ export class InterviewsController {
   }
 
   @Post()
+  @RequirePermissions('interviews:create')
   async create(
     @CurrentUser() user: CurrentUserPayload,
     @Body() dto: CreateInterviewDto,
@@ -43,6 +46,7 @@ export class InterviewsController {
   }
 
   @Get(':id')
+  @RequirePermissions('interviews:read')
   async findOne(
     @CurrentUser() user: CurrentUserPayload,
     @Param('id') id: string,
@@ -51,6 +55,7 @@ export class InterviewsController {
   }
 
   @Patch(':id')
+  @RequirePermissions('interviews:update')
   async update(
     @CurrentUser() user: CurrentUserPayload,
     @Param('id') id: string,
@@ -60,6 +65,7 @@ export class InterviewsController {
   }
 
   @Delete(':id')
+  @RequirePermissions('interviews:delete')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(
     @CurrentUser() user: CurrentUserPayload,
