@@ -10,6 +10,7 @@ import {
   UploadedFile,
   HttpCode,
   HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ResumesService } from './resumes.service';
@@ -33,6 +34,9 @@ export class ResumesController {
     @Param('candidateId') candidateId: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
+    if (!file) {
+      throw new BadRequestException('File is required');
+    }
     return this.resumesService.upload(
       user.tenantId,
       user.id,

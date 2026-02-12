@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -91,7 +91,7 @@ export class UsersService {
         passwordHash,
         firstName: dto.firstName,
         lastName: dto.lastName,
-        role: (dto.role as any) || 'RECRUITER',
+        role: (dto.role as UserRole) || UserRole.RECRUITER,
       },
       select: userSelect,
     });
@@ -114,7 +114,7 @@ export class UsersService {
 
     const updateData: Prisma.UserUpdateInput = {};
 
-    if (dto.role !== undefined) updateData.role = dto.role as any;
+    if (dto.role !== undefined) updateData.role = dto.role as UserRole;
     if (dto.isActive !== undefined) updateData.isActive = dto.isActive;
     if (dto.firstName !== undefined) updateData.firstName = dto.firstName;
     if (dto.lastName !== undefined) updateData.lastName = dto.lastName;

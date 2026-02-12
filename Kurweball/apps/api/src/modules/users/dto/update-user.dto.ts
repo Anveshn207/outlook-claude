@@ -1,8 +1,8 @@
-import { IsOptional, IsString, IsBoolean } from 'class-validator';
+import { IsOptional, IsString, IsBoolean, IsIn } from 'class-validator';
 
 export class UpdateUserDto {
   @IsOptional()
-  @IsString()
+  @IsIn(['ADMIN', 'MANAGER', 'RECRUITER', 'VIEWER'])
   role?: string;
 
   @IsOptional()

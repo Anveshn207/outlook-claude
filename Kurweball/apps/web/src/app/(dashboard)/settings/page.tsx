@@ -25,6 +25,7 @@ import {
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api";
 import { usePermissions } from "@/hooks/use-permissions";
+import { useToast } from "@/hooks/use-toast";
 
 // ---------------------------------------------------------------------------
 // Types & constants
@@ -118,6 +119,7 @@ const emptyForm: FieldFormData = {
 
 export default function SettingsPage() {
   const { can } = usePermissions();
+  const toast = useToast((s) => s.toast);
   const [activeTab, setActiveTab] = useState("custom-fields");
 
   // Custom fields state
@@ -253,7 +255,11 @@ export default function SettingsPage() {
       await fetchFields();
     } catch (err) {
       console.error("[Settings] Failed to save custom field:", err);
-      alert(err instanceof Error ? err.message : "Failed to save custom field");
+      toast({
+        title: "Failed to save custom field",
+        description: err instanceof Error ? err.message : undefined,
+        variant: "error",
+      });
     } finally {
       setSaving(false);
     }
@@ -272,9 +278,11 @@ export default function SettingsPage() {
       await fetchFields();
     } catch (err) {
       console.error("[Settings] Failed to delete custom field:", err);
-      alert(
-        err instanceof Error ? err.message : "Failed to delete custom field",
-      );
+      toast({
+        title: "Failed to delete custom field",
+        description: err instanceof Error ? err.message : undefined,
+        variant: "error",
+      });
     }
   }
 

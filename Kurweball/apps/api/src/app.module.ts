@@ -1,6 +1,7 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CandidatesModule } from './modules/candidates/candidates.module';
@@ -21,6 +22,7 @@ import { UsersModule } from './modules/users/users.module';
 import { ImportExportModule } from './modules/import-export/import-export.module';
 import { HealthModule } from './modules/health/health.module';
 import { RolesGuard } from './modules/auth/rbac/roles.guard';
+import { RequestLoggerMiddleware } from './common/middleware';
 
 @Module({
   imports: [
@@ -28,6 +30,7 @@ import { RolesGuard } from './modules/auth/rbac/roles.guard';
       isGlobal: true,
       envFilePath: ['.env.local', '.env', '../../.env'],
     }),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     PrismaModule,
     AuthModule,
     CandidatesModule,
@@ -48,6 +51,13 @@ import { RolesGuard } from './modules/auth/rbac/roles.guard';
     ImportExportModule,
     HealthModule,
   ],
-  providers: [{ provide: APP_GUARD, useClass: RolesGuard }],
+  providers: [
+    { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestLoggerMiddleware).forRoutes('*');
+  }
+}

@@ -290,7 +290,7 @@ export default function CandidateProfilePage() {
             <MapPin className="h-4 w-4" /> {candidate.location}
           </span>
         )}
-        {candidate.linkedinUrl && (
+        {candidate.linkedinUrl && /^https?:\/\//i.test(candidate.linkedinUrl) && (
           <a
             href={candidate.linkedinUrl}
             target="_blank"

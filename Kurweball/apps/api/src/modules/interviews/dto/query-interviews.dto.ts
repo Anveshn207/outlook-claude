@@ -1,4 +1,4 @@
-import { IsOptional, IsEnum, IsString, IsInt, Min, Max } from 'class-validator';
+import { IsOptional, IsEnum, IsString, IsInt, IsIn, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { InterviewStatus, InterviewType } from '@prisma/client';
 
@@ -37,10 +37,10 @@ export class QueryInterviewsDto {
   type?: InterviewType;
 
   @IsOptional()
-  @IsString()
+  @IsIn(['scheduledAt', 'status', 'type', 'createdAt', 'updatedAt'])
   sortBy?: string = 'scheduledAt';
 
   @IsOptional()
-  @IsEnum(['asc', 'desc'] as const)
+  @IsIn(['asc', 'desc'])
   sortOrder?: 'asc' | 'desc' = 'asc';
 }

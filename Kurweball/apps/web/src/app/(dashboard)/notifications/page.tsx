@@ -151,7 +151,7 @@ export default function NotificationsPage() {
       key: "link",
       header: "",
       render: (n) =>
-        n.link ? (
+        n.link && n.link.startsWith('/') ? (
           <Link
             href={n.link}
             onClick={(e) => e.stopPropagation()}

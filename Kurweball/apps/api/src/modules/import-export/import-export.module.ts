@@ -12,6 +12,19 @@ import { ExportController } from './export.controller';
     MulterModule.register({
       dest: './uploads/imports',
       limits: { fileSize: 10 * 1024 * 1024 },
+      fileFilter: (_req, file, cb) => {
+        const allowed = [
+          'text/csv',
+          'application/vnd.ms-excel',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'text/plain',
+        ];
+        if (allowed.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(new Error('Only CSV and Excel files are allowed'), false);
+        }
+      },
     }),
   ],
   controllers: [ImportController, ExportController],

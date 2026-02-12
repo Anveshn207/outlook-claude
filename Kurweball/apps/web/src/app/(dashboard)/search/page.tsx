@@ -41,6 +41,13 @@ interface SearchResult {
   };
 }
 
+function sanitizeHighlight(html: string): string {
+  // Only allow <em> and <mark> tags from OpenSearch highlights
+  return html
+    .replace(/<(?!\/?(?:em|mark)\b)[^>]*>/gi, '')  // Strip all tags except em and mark
+    .replace(/on\w+\s*=/gi, '');  // Strip event handlers
+}
+
 const statusColors: Record<string, string> = {
   ACTIVE: "bg-emerald-100 text-emerald-700 border-emerald-200",
   PASSIVE: "bg-amber-100 text-amber-700 border-amber-200",
@@ -281,7 +288,7 @@ export default function SearchPage() {
                               </span>{" "}
                               <span
                                 dangerouslySetInnerHTML={{
-                                  __html: hit.highlight.resumeText[0],
+                                  __html: sanitizeHighlight(hit.highlight.resumeText[0]),
                                 }}
                               />
                             </div>

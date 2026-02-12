@@ -32,7 +32,7 @@ export class QueryTasksDto {
   entityType?: string;
 
   @IsOptional()
-  @IsString()
+  @IsIn(['dueDate', 'status', 'priority', 'createdAt', 'updatedAt'])
   sortBy?: string = 'dueDate';
 
   @IsOptional()

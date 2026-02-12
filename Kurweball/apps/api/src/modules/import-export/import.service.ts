@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -59,7 +59,12 @@ export class ImportService {
     entityType: ImportEntityType,
     mappings: ColumnMapping[],
   ): Promise<ImportResult> {
-    const filePath = path.resolve('./uploads/imports', fileId);
+    const baseDir = path.resolve('./uploads/imports');
+    const safeName = path.basename(fileId); // Strip directory components
+    const filePath = path.resolve(baseDir, safeName);
+    if (!filePath.startsWith(baseDir)) {
+      throw new BadRequestException('Invalid file ID');
+    }
     const allRows = await this.getAllRows(filePath);
     const fieldDefs = this.getFieldDefinitions(entityType);
 

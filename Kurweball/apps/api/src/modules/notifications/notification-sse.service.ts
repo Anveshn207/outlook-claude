@@ -17,7 +17,15 @@ export class NotificationSseService {
 
     console.log(`[NotificationSSE] Client subscribed: ${userId}`);
 
-    return merge(subject.asObservable(), heartbeat$);
+    return new Observable<MessageEvent>((subscriber) => {
+      const sub = merge(subject.asObservable(), heartbeat$).subscribe(subscriber);
+
+      // Cleanup when client disconnects
+      return () => {
+        sub.unsubscribe();
+        this.removeClient(userId);
+      };
+    });
   }
 
   pushToUser(userId: string, notification: Record<string, any>): void {

@@ -5,6 +5,7 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -31,6 +32,9 @@ export class ImportController {
     @Body() dto: UploadImportDto,
     @CurrentUser() user: CurrentUserPayload,
   ) {
+    if (!file) {
+      throw new BadRequestException('File is required');
+    }
     return this.importService.uploadAndParse(
       user.tenantId,
       file,

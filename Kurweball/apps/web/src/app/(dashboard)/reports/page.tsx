@@ -105,9 +105,7 @@ export default function ReportsPage() {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"}/reports/export/${type}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         }
       );
       if (!res.ok) throw new Error("Export failed");

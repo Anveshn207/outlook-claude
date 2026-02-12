@@ -1,4 +1,4 @@
-import { IsOptional, IsEnum, IsString, IsInt, Min, Max } from 'class-validator';
+import { IsOptional, IsEnum, IsString, IsInt, IsIn, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CandidateSource, CandidateStatus } from '@prisma/client';
 
@@ -29,10 +29,10 @@ export class QueryCandidatesDto {
   source?: CandidateSource;
 
   @IsOptional()
-  @IsString()
+  @IsIn(['firstName', 'lastName', 'email', 'status', 'createdAt', 'updatedAt'])
   sortBy?: string = 'createdAt';
 
   @IsOptional()
-  @IsEnum(['asc', 'desc'] as const)
+  @IsIn(['asc', 'desc'])
   sortOrder?: 'asc' | 'desc' = 'desc';
 }

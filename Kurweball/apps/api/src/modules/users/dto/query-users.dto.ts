@@ -24,7 +24,7 @@ export class QueryUsersDto {
   role?: string;
 
   @IsOptional()
-  @IsString()
+  @IsIn(['firstName', 'lastName', 'email', 'role', 'createdAt'])
   sortBy?: string = 'createdAt';
 
   @IsOptional()

@@ -28,17 +28,22 @@ export function CustomFieldDisplay({ field, value }: CustomFieldDisplayProps) {
       );
     case "DATE":
       return <span>{new Date(String(value)).toLocaleDateString()}</span>;
-    case "URL":
+    case "URL": {
+      const url = String(value);
+      if (!/^https?:\/\//i.test(url)) {
+        return <span className="text-sm text-muted-foreground">{url}</span>;
+      }
       return (
         <a
-          href={String(value)}
+          href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-primary hover:underline"
+          className="text-sm text-blue-600 hover:underline"
         >
-          {String(value).replace(/^https?:\/\//, "").slice(0, 40)}
+          {url}
         </a>
       );
+    }
     case "EMAIL":
       return (
         <a href={`mailto:${value}`} className="text-primary hover:underline">
