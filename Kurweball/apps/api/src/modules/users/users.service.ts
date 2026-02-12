@@ -24,7 +24,7 @@ export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(tenantId: string, query: QueryUsersDto) {
-    const { page = 1, limit = 25, search, role } = query;
+    const { page = 1, limit = 25, search, role, sortBy = 'createdAt', sortOrder = 'desc' } = query;
 
     const where: Prisma.UserWhereInput = { tenantId };
 
@@ -47,7 +47,7 @@ export class UsersService {
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { [sortBy]: sortOrder },
         select: userSelect,
       }),
       this.prisma.user.count({ where }),

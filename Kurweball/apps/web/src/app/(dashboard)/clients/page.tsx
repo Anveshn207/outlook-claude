@@ -2,7 +2,9 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
+import { ExportDropdown } from "@/components/shared/export-dropdown";
+import { ImportDialog } from "@/components/shared/import-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -52,6 +54,7 @@ export default function ClientsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [showImport, setShowImport] = useState(false);
   const [customValues, setCustomValues] = useState<Record<string, unknown>>({});
   const { fields: customFields } = useCustomFields("client");
 
@@ -194,10 +197,17 @@ export default function ClientsPage() {
             Manage your client relationships and track engagement.
           </p>
         </div>
-        <Button onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4" />
-          Add Client
-        </Button>
+        <div className="flex items-center gap-2">
+          <ExportDropdown entity="clients" />
+          <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
+            <Upload className="h-4 w-4" />
+            Import
+          </Button>
+          <Button onClick={() => setShowCreate(true)}>
+            <Plus className="h-4 w-4" />
+            Add Client
+          </Button>
+        </div>
       </div>
 
       <DataTable
@@ -306,6 +316,12 @@ export default function ClientsPage() {
           </form>
         </DialogContent>
       </Dialog>
+      <ImportDialog
+        open={showImport}
+        onOpenChange={setShowImport}
+        entityType="client"
+        onSuccess={() => setRefreshKey((k) => k + 1)}
+      />
     </div>
   );
 }

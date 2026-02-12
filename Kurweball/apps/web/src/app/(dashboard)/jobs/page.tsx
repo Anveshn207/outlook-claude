@@ -2,7 +2,9 @@
 
 import { useCallback, useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
+import { ExportDropdown } from "@/components/shared/export-dropdown";
+import { ImportDialog } from "@/components/shared/import-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -74,6 +76,7 @@ export default function JobsPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [customValues, setCustomValues] = useState<Record<string, unknown>>({});
   const { fields: customFields } = useCustomFields("job");
+  const [showImport, setShowImport] = useState(false);
   const [clients, setClients] = useState<ClientOption[]>([]);
 
   useEffect(() => {
@@ -237,10 +240,17 @@ export default function JobsPage() {
             Track open positions and manage job requisitions.
           </p>
         </div>
-        <Button onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4" />
-          Add Job
-        </Button>
+        <div className="flex items-center gap-2">
+          <ExportDropdown entity="jobs" />
+          <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
+            <Upload className="h-4 w-4" />
+            Import
+          </Button>
+          <Button onClick={() => setShowCreate(true)}>
+            <Plus className="h-4 w-4" />
+            Add Job
+          </Button>
+        </div>
       </div>
 
       <DataTable
@@ -376,6 +386,12 @@ export default function JobsPage() {
           </form>
         </DialogContent>
       </Dialog>
+      <ImportDialog
+        open={showImport}
+        onOpenChange={setShowImport}
+        entityType="job"
+        onSuccess={() => setRefreshKey((k) => k + 1)}
+      />
     </div>
   );
 }

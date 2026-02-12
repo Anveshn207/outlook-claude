@@ -86,7 +86,7 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function InterviewsPage() {
-  const { user } = useAuthStore();
+  const { user: _user } = useAuthStore();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [showCreate, setShowCreate] = useState(false);

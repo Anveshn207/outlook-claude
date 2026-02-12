@@ -17,6 +17,7 @@ import { CustomFieldsModule } from './modules/custom-fields/custom-fields.module
 import { SavedViewsModule } from './modules/saved-views/saved-views.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { UsersModule } from './modules/users/users.module';
+import { ImportExportModule } from './modules/import-export/import-export.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { UsersModule } from './modules/users/users.module';
     SavedViewsModule,
     NotificationsModule,
     UsersModule,
+    ImportExportModule,
   ],
 })
 export class AppModule {}

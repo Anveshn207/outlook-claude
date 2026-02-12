@@ -12,6 +12,7 @@ import {
   ClipboardList,
   BarChart3,
   UsersRound,
+  Upload,
   Settings,
   LogOut,
   X,
@@ -29,6 +30,7 @@ const navigation = [
   { name: "Interviews", href: "/interviews", icon: CalendarDays },
   { name: "Tasks", href: "/tasks", icon: ClipboardList },
   { name: "Reports", href: "/reports", icon: BarChart3 },
+  { name: "Import", href: "/import", icon: Upload },
   { name: "Team", href: "/team", icon: UsersRound },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
