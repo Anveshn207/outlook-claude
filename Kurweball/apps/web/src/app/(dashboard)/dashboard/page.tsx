@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/auth-store";
 import { apiFetch } from "@/lib/api";
+import { FadeIn, StaggerContainer, StaggerItem, AnimatedCard } from "@/components/shared/motion";
 
 interface DashboardStats {
   openJobs: number;
@@ -64,9 +65,9 @@ const activityIcons: Record<string, typeof MessageSquare> = {
 };
 
 const priorityColors: Record<string, string> = {
-  HIGH: "bg-red-100 text-red-700 border-red-200",
-  MEDIUM: "bg-amber-100 text-amber-700 border-amber-200",
-  LOW: "bg-gray-100 text-gray-600 border-gray-200",
+  HIGH: "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800",
+  MEDIUM: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800",
+  LOW: "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800/50 dark:text-gray-400 dark:border-gray-700",
 };
 
 function timeAgo(dateStr: string): string {
@@ -113,7 +114,7 @@ export default function DashboardPage() {
       label: "Open Jobs",
       value: stats?.openJobs ?? 0,
       icon: Briefcase,
-      color: "bg-blue-50 text-blue-600",
+      color: "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
       accent: "border-l-blue-500",
       href: "/jobs",
     },
@@ -121,7 +122,7 @@ export default function DashboardPage() {
       label: "Active Candidates",
       value: stats?.activeCandidates ?? 0,
       icon: Users,
-      color: "bg-emerald-50 text-emerald-600",
+      color: "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
       accent: "border-l-emerald-500",
       href: "/candidates",
     },
@@ -130,7 +131,7 @@ export default function DashboardPage() {
       value: stats?.totalSubmissions ?? 0,
       sub: stats?.submissionsThisWeek ? `${stats.submissionsThisWeek} this week` : undefined,
       icon: Send,
-      color: "bg-amber-50 text-amber-600",
+      color: "bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
       accent: "border-l-amber-500",
       href: "/pipeline",
     },
@@ -138,7 +139,7 @@ export default function DashboardPage() {
       label: "Placements",
       value: stats?.placements ?? 0,
       icon: CheckCircle2,
-      color: "bg-purple-50 text-purple-600",
+      color: "bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400",
       accent: "border-l-purple-500",
       href: "/reports",
     },
@@ -153,46 +154,52 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8 overflow-hidden">
       {/* Welcome */}
-      <div>
-        <h2 className="text-2xl font-bold text-foreground">
-          Welcome back, {user?.firstName || "there"}!
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Here is what is happening with your recruiting pipeline today.
-        </p>
-      </div>
+      <FadeIn>
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">
+            Welcome back, {user?.firstName || "there"}!
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Here is what is happening with your recruiting pipeline today.
+          </p>
+        </div>
+      </FadeIn>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <StaggerContainer className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {statCards.map((stat) => (
-          <Link key={stat.label} href={stat.href}>
-            <Card className={`border-l-4 ${stat.accent} transition-shadow hover:shadow-md`}>
-              <CardContent className="flex items-center gap-4 p-5">
-                <div
-                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg ${stat.color}`}
-                >
-                  <stat.icon className="h-6 w-6" />
-                </div>
-                <div>
-                  {loading ? (
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                  ) : (
-                    <>
-                      <p className="text-2xl font-bold text-foreground">
-                        {stat.value}
-                      </p>
-                      {"sub" in stat && stat.sub && (
-                        <p className="text-xs text-muted-foreground">{stat.sub}</p>
+          <StaggerItem key={stat.label}>
+            <Link href={stat.href}>
+              <AnimatedCard>
+                <Card className={`border-l-4 ${stat.accent} transition-shadow hover:shadow-md`}>
+                  <CardContent className="flex items-center gap-4 p-5">
+                    <div
+                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg ${stat.color}`}
+                    >
+                      <stat.icon className="h-6 w-6" />
+                    </div>
+                    <div>
+                      {loading ? (
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      ) : (
+                        <>
+                          <p className="text-2xl font-bold text-foreground">
+                            {stat.value}
+                          </p>
+                          {"sub" in stat && stat.sub && (
+                            <p className="text-xs text-muted-foreground">{stat.sub}</p>
+                          )}
+                        </>
                       )}
-                    </>
-                  )}
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
+                      <p className="text-sm text-muted-foreground">{stat.label}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </AnimatedCard>
+            </Link>
+          </StaggerItem>
         ))}
-      </div>
+      </StaggerContainer>
 
       {/* Secondary stats row */}
       {!loading && stats && (
@@ -316,7 +323,7 @@ export default function DashboardPage() {
                           <span
                             className={
                               isOverdue
-                                ? "flex items-center gap-1 font-medium text-red-600"
+                                ? "flex items-center gap-1 font-medium text-red-600 dark:text-red-400"
                                 : ""
                             }
                           >

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "./sidebar";
 import { Navbar } from "./navbar";
+import { PageTransition } from "@/components/shared/motion";
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -19,6 +20,7 @@ const pageTitles: Record<string, string> = {
   "/search": "Search",
   "/import": "Import Data",
   "/settings": "Settings",
+  "/account": "My Account",
 };
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -30,7 +32,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     Object.entries(pageTitles).find(([key]) =>
       pathname.startsWith(key),
     )?.[1] ||
-    "Kurweball";
+    "KurweBall";
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -41,7 +43,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Navbar title={title} onMenuClick={() => setSidebarOpen(true)} />
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          {children}
+          <PageTransition key={pathname}>
+            {children}
+          </PageTransition>
         </main>
       </div>
     </div>

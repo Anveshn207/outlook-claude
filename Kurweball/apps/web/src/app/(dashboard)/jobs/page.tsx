@@ -52,16 +52,16 @@ interface ClientOption {
 }
 
 const statusColors: Record<string, string> = {
-  OPEN: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  ON_HOLD: "bg-amber-100 text-amber-700 border-amber-200",
-  CLOSED: "bg-gray-100 text-gray-600 border-gray-200",
-  FILLED: "bg-blue-100 text-blue-700 border-blue-200",
+  OPEN: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800",
+  ON_HOLD: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800",
+  CLOSED: "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-800",
+  FILLED: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800",
 };
 
 const priorityColors: Record<string, string> = {
-  HOT: "bg-red-100 text-red-700 border-red-200",
-  NORMAL: "bg-blue-100 text-blue-700 border-blue-200",
-  LOW: "bg-gray-100 text-gray-600 border-gray-200",
+  HOT: "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800",
+  NORMAL: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800",
+  LOW: "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-800",
 };
 
 const jobTypeLabels: Record<string, string> = {

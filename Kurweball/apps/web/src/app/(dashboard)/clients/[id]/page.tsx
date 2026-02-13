@@ -85,17 +85,17 @@ interface ClientDetail {
 // --- Status colors ---
 
 const clientStatusColors: Record<string, string> = {
-  ACTIVE: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  INACTIVE: "bg-gray-100 text-gray-600 border-gray-200",
-  PROSPECT: "bg-amber-100 text-amber-700 border-amber-200",
+  ACTIVE: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800",
+  INACTIVE: "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-800",
+  PROSPECT: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800",
 };
 
 const jobStatusColors: Record<string, string> = {
-  OPEN: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  CLOSED: "bg-gray-100 text-gray-600 border-gray-200",
-  ON_HOLD: "bg-amber-100 text-amber-700 border-amber-200",
-  FILLED: "bg-blue-100 text-blue-700 border-blue-200",
-  CANCELLED: "bg-red-100 text-red-700 border-red-200",
+  OPEN: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800",
+  CLOSED: "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-800",
+  ON_HOLD: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800",
+  FILLED: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800",
+  CANCELLED: "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800",
 };
 
 const jobTypeLabels: Record<string, string> = {

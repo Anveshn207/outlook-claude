@@ -15,6 +15,7 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
+import { FadeIn } from "@/components/shared/motion";
 
 function RegisterForm() {
   const router = useRouter();
@@ -114,6 +115,7 @@ function RegisterForm() {
   }
 
   return (
+    <FadeIn>
     <Card>
       <CardHeader className="text-center">
         <CardTitle className="text-2xl font-bold">
@@ -122,7 +124,7 @@ function RegisterForm() {
         <CardDescription>
           {inviteToken
             ? "Complete your registration to join the team"
-            : "Get started with Kurweball"}
+            : "Get started with KurweBall"}
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
@@ -229,6 +231,7 @@ function RegisterForm() {
         </CardFooter>
       </form>
     </Card>
+    </FadeIn>
   );
 }
 

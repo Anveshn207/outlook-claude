@@ -456,7 +456,7 @@ export default function ReportsPage() {
                         </span>
                         <span className="text-muted-foreground">
                           {s.placed}/{s.total} placed &mdash;{" "}
-                          <span className="font-bold text-cyan-600">
+                          <span className="font-bold text-cyan-600 dark:text-cyan-400">
                             {s.conversionRate.toFixed(1)}%
                           </span>
                         </span>

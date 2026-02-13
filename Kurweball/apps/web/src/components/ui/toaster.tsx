@@ -7,9 +7,9 @@ type ToastVariant = NonNullable<Toast["variant"]>;
 
 const variantStyles: Record<ToastVariant, string> = {
   default: "border-border bg-background text-foreground",
-  success: "border-green-200 bg-green-50 text-green-900",
-  error: "border-red-200 bg-red-50 text-red-900",
-  warning: "border-yellow-200 bg-yellow-50 text-yellow-900",
+  success: "border-green-200 bg-green-50 text-green-900 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300",
+  error: "border-red-200 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300",
+  warning: "border-yellow-200 bg-yellow-50 text-yellow-900 dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300",
 };
 
 const variantIcons: Record<ToastVariant, React.ReactNode> = {

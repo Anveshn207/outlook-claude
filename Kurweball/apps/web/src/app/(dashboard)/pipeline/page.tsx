@@ -83,39 +83,39 @@ interface CandidateOption {
 /* ─── Stage color mapping (hex → Tailwind utility) ─── */
 
 const stageColorMap: Record<string, { dot: string; bg: string }> = {
-  "#64748b": { dot: "bg-slate-500", bg: "bg-slate-50" },
-  "#6B7280": { dot: "bg-gray-500", bg: "bg-gray-50" },
-  "#3B82F6": { dot: "bg-blue-500", bg: "bg-blue-50" },
-  "#3b82f6": { dot: "bg-blue-500", bg: "bg-blue-50" },
-  "#6366f1": { dot: "bg-indigo-500", bg: "bg-indigo-50" },
-  "#8B5CF6": { dot: "bg-violet-500", bg: "bg-violet-50" },
-  "#8b5cf6": { dot: "bg-violet-500", bg: "bg-violet-50" },
-  "#F59E0B": { dot: "bg-amber-500", bg: "bg-amber-50" },
-  "#f59e0b": { dot: "bg-amber-500", bg: "bg-amber-50" },
-  "#10B981": { dot: "bg-emerald-500", bg: "bg-emerald-50" },
-  "#10b981": { dot: "bg-emerald-500", bg: "bg-emerald-50" },
-  "#059669": { dot: "bg-emerald-600", bg: "bg-emerald-50" },
-  "#22c55e": { dot: "bg-green-500", bg: "bg-green-50" },
-  "#EF4444": { dot: "bg-red-500", bg: "bg-red-50" },
-  "#ef4444": { dot: "bg-red-500", bg: "bg-red-50" },
-  "#06b6d4": { dot: "bg-cyan-500", bg: "bg-cyan-50" },
+  "#64748b": { dot: "bg-slate-500", bg: "bg-slate-50 dark:bg-slate-900/30" },
+  "#6B7280": { dot: "bg-gray-500", bg: "bg-gray-50 dark:bg-gray-900/30" },
+  "#3B82F6": { dot: "bg-blue-500", bg: "bg-blue-50 dark:bg-blue-900/30" },
+  "#3b82f6": { dot: "bg-blue-500", bg: "bg-blue-50 dark:bg-blue-900/30" },
+  "#6366f1": { dot: "bg-indigo-500", bg: "bg-indigo-50 dark:bg-indigo-900/30" },
+  "#8B5CF6": { dot: "bg-violet-500", bg: "bg-violet-50 dark:bg-violet-900/30" },
+  "#8b5cf6": { dot: "bg-violet-500", bg: "bg-violet-50 dark:bg-violet-900/30" },
+  "#F59E0B": { dot: "bg-amber-500", bg: "bg-amber-50 dark:bg-amber-900/30" },
+  "#f59e0b": { dot: "bg-amber-500", bg: "bg-amber-50 dark:bg-amber-900/30" },
+  "#10B981": { dot: "bg-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/30" },
+  "#10b981": { dot: "bg-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/30" },
+  "#059669": { dot: "bg-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-900/30" },
+  "#22c55e": { dot: "bg-green-500", bg: "bg-green-50 dark:bg-green-900/30" },
+  "#EF4444": { dot: "bg-red-500", bg: "bg-red-50 dark:bg-red-900/30" },
+  "#ef4444": { dot: "bg-red-500", bg: "bg-red-50 dark:bg-red-900/30" },
+  "#06b6d4": { dot: "bg-cyan-500", bg: "bg-cyan-50 dark:bg-cyan-900/30" },
 };
 
 function getStageColors(hex: string | null) {
   if (hex && stageColorMap[hex]) return stageColorMap[hex];
-  return { dot: "bg-slate-500", bg: "bg-slate-50" };
+  return { dot: "bg-slate-500", bg: "bg-slate-50 dark:bg-slate-900/30" };
 }
 
 /* ─── Submission status colors ─── */
 
 const statusColors: Record<string, string> = {
-  SUBMITTED: "bg-blue-100 text-blue-700 border-blue-200",
-  SHORTLISTED: "bg-indigo-100 text-indigo-700 border-indigo-200",
-  INTERVIEW: "bg-amber-100 text-amber-700 border-amber-200",
-  OFFERED: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  PLACED: "bg-green-100 text-green-700 border-green-200",
-  REJECTED: "bg-red-100 text-red-700 border-red-200",
-  WITHDRAWN: "bg-gray-100 text-gray-700 border-gray-200",
+  SUBMITTED: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800",
+  SHORTLISTED: "bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800",
+  INTERVIEW: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800",
+  OFFERED: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800",
+  PLACED: "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800",
+  REJECTED: "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800",
+  WITHDRAWN: "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800/50 dark:text-gray-400 dark:border-gray-700",
 };
 
 /* ─── Main Page ─── */
@@ -394,7 +394,7 @@ export default function PipelinePage() {
                       Final
                     </Badge>
                   )}
-                  <span className="ml-auto rounded-full bg-white/80 px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                  <span className="ml-auto rounded-full bg-white/80 dark:bg-white/10 px-2 py-0.5 text-xs font-medium text-muted-foreground">
                     {stage.submissions.length}
                   </span>
                 </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2, Search, User, Briefcase, MapPin, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -56,7 +56,7 @@ const statusColors: Record<string, string> = {
   DND: "bg-red-100 text-red-700 border-red-200",
 };
 
-export default function SearchPage() {
+function SearchPageContent() {
   const { can } = usePermissions();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -348,5 +348,19 @@ export default function SearchPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-40 items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      }
+    >
+      <SearchPageContent />
+    </Suspense>
   );
 }

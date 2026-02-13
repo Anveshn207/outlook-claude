@@ -15,6 +15,7 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
+import { FadeIn } from "@/components/shared/motion";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -53,10 +54,11 @@ export default function LoginPage() {
   }
 
   return (
+    <FadeIn>
     <Card>
       <CardHeader className="text-center">
         <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-        <CardDescription>Sign in to your Kurweball account</CardDescription>
+        <CardDescription>Sign in to your KurweBall account</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
@@ -117,5 +119,6 @@ export default function LoginPage() {
         </CardFooter>
       </form>
     </Card>
+    </FadeIn>
   );
 }

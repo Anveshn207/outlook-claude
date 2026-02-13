@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-primary: #6366f1;
   --color-primary-foreground: #ffffff;
@@ -31,7 +33,37 @@ body {
   font-family: system-ui, -apple-system, sans-serif;
 }
 
+/* Dark mode overrides */
+.dark {
+  --color-primary: #818cf8;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #1a1a2e;
+  --color-secondary-foreground: #f1f5f9;
+  --color-destructive: #f87171;
+  --color-destructive-foreground: #ffffff;
+  --color-muted: #1a1a2e;
+  --color-muted-foreground: #94a3b8;
+  --color-accent: #1a1a2e;
+  --color-accent-foreground: #f1f5f9;
+  --color-card: #12121e;
+  --color-card-foreground: #f1f5f9;
+  --color-border: #252538;
+  --color-input: #252538;
+  --color-ring: #818cf8;
+  --color-background: #0a0a12;
+  --color-foreground: #f1f5f9;
+  --color-sidebar: #080810;
+  --color-sidebar-foreground: #e2e8f0;
+  --color-sidebar-accent: #1a1a2e;
+  --color-sidebar-muted: #94a3b8;
+}
+
 /* Landing page animations */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
 @keyframes landing-blob-float {
   0%, 100% { transform: translate(0, 0) scale(1); }
   33% { transform: translate(30px, -50px) scale(1.1); }
@@ -90,8 +122,3 @@ body {
 .landing-delay-2 { animation-delay: 0.3s; }
 .landing-delay-3 { animation-delay: 0.45s; }
 .landing-delay-4 { animation-delay: 0.7s; }
-
-/* Smooth scrolling for anchor links */
-html {
-  scroll-behavior: smooth;
-}

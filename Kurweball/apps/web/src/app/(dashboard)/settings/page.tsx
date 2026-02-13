@@ -83,16 +83,16 @@ interface FieldFormData {
 }
 
 const fieldTypeColors: Record<string, string> = {
-  TEXT: "bg-gray-100 text-gray-600 border-gray-200",
-  NUMBER: "bg-indigo-100 text-indigo-700 border-indigo-200",
-  DATE: "bg-cyan-100 text-cyan-700 border-cyan-200",
-  SELECT: "bg-purple-100 text-purple-700 border-purple-200",
-  MULTI_SELECT: "bg-violet-100 text-violet-700 border-violet-200",
-  CHECKBOX: "bg-orange-100 text-orange-700 border-orange-200",
-  URL: "bg-blue-100 text-blue-700 border-blue-200",
-  EMAIL: "bg-teal-100 text-teal-700 border-teal-200",
-  PHONE: "bg-lime-100 text-lime-700 border-lime-200",
-  CURRENCY: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  TEXT: "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-800",
+  NUMBER: "bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800",
+  DATE: "bg-cyan-100 text-cyan-700 border-cyan-200 dark:bg-cyan-900/30 dark:text-cyan-400 dark:border-cyan-800",
+  SELECT: "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
+  MULTI_SELECT: "bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/30 dark:text-violet-400 dark:border-violet-800",
+  CHECKBOX: "bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-800",
+  URL: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800",
+  EMAIL: "bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-900/30 dark:text-teal-400 dark:border-teal-800",
+  PHONE: "bg-lime-100 text-lime-700 border-lime-200 dark:bg-lime-900/30 dark:text-lime-400 dark:border-lime-800",
+  CURRENCY: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800",
 };
 
 function slugify(str: string): string {

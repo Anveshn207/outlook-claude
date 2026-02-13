@@ -87,16 +87,16 @@ interface SubmissionRow {
 // --- Constants ---
 
 const statusColors: Record<string, string> = {
-  OPEN: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  CLOSED: "bg-gray-100 text-gray-600 border-gray-200",
-  ON_HOLD: "bg-amber-100 text-amber-700 border-amber-200",
-  FILLED: "bg-blue-100 text-blue-700 border-blue-200",
+  OPEN: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800",
+  CLOSED: "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-800",
+  ON_HOLD: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800",
+  FILLED: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800",
 };
 
 const priorityColors: Record<string, string> = {
-  HOT: "bg-red-100 text-red-700 border-red-200",
-  NORMAL: "bg-blue-100 text-blue-700 border-blue-200",
-  LOW: "bg-gray-100 text-gray-600 border-gray-200",
+  HOT: "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800",
+  NORMAL: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800",
+  LOW: "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-800",
 };
 
 const jobTypeLabels: Record<string, string> = {
@@ -106,13 +106,13 @@ const jobTypeLabels: Record<string, string> = {
 };
 
 const submissionStatusColors: Record<string, string> = {
-  SUBMITTED: "bg-blue-100 text-blue-700 border-blue-200",
-  SHORTLISTED: "bg-indigo-100 text-indigo-700 border-indigo-200",
-  INTERVIEW: "bg-amber-100 text-amber-700 border-amber-200",
-  OFFERED: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  PLACED: "bg-green-100 text-green-700 border-green-200",
-  REJECTED: "bg-red-100 text-red-700 border-red-200",
-  WITHDRAWN: "bg-gray-100 text-gray-600 border-gray-200",
+  SUBMITTED: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800",
+  SHORTLISTED: "bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800",
+  INTERVIEW: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800",
+  OFFERED: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800",
+  PLACED: "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800",
+  REJECTED: "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800",
+  WITHDRAWN: "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-800",
 };
 
 // --- Component ---

@@ -57,18 +57,18 @@ interface JobOption {
 }
 
 const typeColors: Record<string, string> = {
-  PHONE_SCREEN: "bg-gray-100 text-gray-700 border-gray-200",
-  TECHNICAL: "bg-blue-100 text-blue-700 border-blue-200",
-  ONSITE: "bg-amber-100 text-amber-700 border-amber-200",
-  PANEL: "bg-purple-100 text-purple-700 border-purple-200",
-  FINAL: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  PHONE_SCREEN: "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-800",
+  TECHNICAL: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800",
+  ONSITE: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800",
+  PANEL: "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
+  FINAL: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800",
 };
 
 const statusColors: Record<string, string> = {
-  SCHEDULED: "bg-blue-100 text-blue-700 border-blue-200",
-  COMPLETED: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  CANCELLED: "bg-gray-100 text-gray-600 border-gray-200",
-  NO_SHOW: "bg-red-100 text-red-700 border-red-200",
+  SCHEDULED: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800",
+  COMPLETED: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800",
+  CANCELLED: "bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-800",
+  NO_SHOW: "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800",
 };
 
 const typeLabels: Record<string, string> = {
@@ -382,7 +382,7 @@ export default function InterviewsPage() {
           <Button
             size="sm"
             variant="ghost"
-            className="h-7 text-xs text-blue-600 hover:text-blue-700"
+            className="h-7 text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
             onClick={(e) => {
               e.stopPropagation();
               openFeedbackDialog(row);

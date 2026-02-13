@@ -223,8 +223,8 @@ const ROLES = [
     key: "ADMIN",
     label: "Admin",
     description: "Full system access. Can manage users, settings, and all data.",
-    color: "bg-purple-100 text-purple-700 border-purple-200",
-    iconColor: "text-purple-600",
+    color: "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800",
+    iconColor: "text-purple-600 dark:text-purple-400",
     icon: Crown,
     permCount: ROLE_PERMISSIONS.ADMIN.size,
   },
@@ -232,8 +232,8 @@ const ROLES = [
     key: "MANAGER",
     label: "Manager",
     description: "Read + edit access to everything. Cannot manage users or system settings.",
-    color: "bg-amber-100 text-amber-700 border-amber-200",
-    iconColor: "text-amber-600",
+    color: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800",
+    iconColor: "text-amber-600 dark:text-amber-400",
     icon: UserCog,
     permCount: ROLE_PERMISSIONS.MANAGER.size,
   },
@@ -241,8 +241,8 @@ const ROLES = [
     key: "RECRUITER",
     label: "Recruiter",
     description: "Core recruitment operations. Manage candidates, jobs, clients, and pipeline.",
-    color: "bg-blue-100 text-blue-700 border-blue-200",
-    iconColor: "text-blue-600",
+    color: "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800",
+    iconColor: "text-blue-600 dark:text-blue-400",
     icon: User,
     permCount: ROLE_PERMISSIONS.RECRUITER.size,
   },
@@ -250,8 +250,8 @@ const ROLES = [
     key: "VIEWER",
     label: "Viewer",
     description: "Read-only access. Can view all data but cannot create, edit, or delete.",
-    color: "bg-gray-100 text-gray-700 border-gray-200",
-    iconColor: "text-gray-500",
+    color: "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-900/30 dark:text-gray-400 dark:border-gray-800",
+    iconColor: "text-gray-500 dark:text-gray-400",
     icon: EyeIcon,
     permCount: ROLE_PERMISSIONS.VIEWER.size,
   },
@@ -261,12 +261,12 @@ function PermissionCell({ allowed }: { allowed: boolean }) {
   return (
     <td className="px-3 py-2 text-center">
       {allowed ? (
-        <div className="mx-auto flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100">
-          <Check className="h-3.5 w-3.5 text-emerald-600" />
+        <div className="mx-auto flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
+          <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
         </div>
       ) : (
-        <div className="mx-auto flex h-6 w-6 items-center justify-center rounded-full bg-gray-100">
-          <X className="h-3.5 w-3.5 text-gray-400" />
+        <div className="mx-auto flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-900/30">
+          <X className="h-3.5 w-3.5 text-gray-400 dark:text-gray-600" />
         </div>
       )}
     </td>
@@ -311,10 +311,10 @@ function PermissionGroupRow({ group }: { group: PermissionGroup }) {
                 className={cn(
                   "text-xs font-medium",
                   count === totalPerms
-                    ? "text-emerald-600"
+                    ? "text-emerald-600 dark:text-emerald-400"
                     : count > 0
-                      ? "text-amber-600"
-                      : "text-gray-400",
+                      ? "text-amber-600 dark:text-amber-400"
+                      : "text-gray-400 dark:text-gray-600",
                 )}
               >
                 {count}/{totalPerms}

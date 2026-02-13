@@ -164,7 +164,7 @@ export default function LandingPage() {
               K
             </div>
             <span className="text-xl font-bold tracking-tight">
-              Kurwe<span className="text-indigo-400">ball</span>
+              Kurwe<span className="text-indigo-400">Ball</span>
             </span>
           </Link>
           <div className="hidden items-center gap-8 md:flex">
@@ -216,7 +216,7 @@ export default function LandingPage() {
 
         {/* Subtitle */}
         <p className="landing-fade-up landing-delay-2 mt-6 max-w-2xl text-lg text-white/50 md:text-xl">
-          Kurweball unifies your candidate pipeline, job postings, client relationships,
+          KurweBall unifies your candidate pipeline, job postings, client relationships,
           and team collaboration into one powerful recruiting platform.
         </p>
 
@@ -277,7 +277,7 @@ export default function LandingPage() {
               </span>
             </h2>
             <p className="mt-4 text-lg text-white/40">
-              From sourcing to offer, Kurweball handles every step of your hiring workflow.
+              From sourcing to offer, KurweBall handles every step of your hiring workflow.
             </p>
           </div>
 
@@ -445,7 +445,7 @@ export default function LandingPage() {
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-lg text-white/40">
             Join hundreds of teams who have already streamlined their hiring process with
-            Kurweball. Get started in minutes.
+            KurweBall. Get started in minutes.
           </p>
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <Link
@@ -467,7 +467,7 @@ export default function LandingPage() {
               K
             </div>
             <span className="font-semibold tracking-tight text-white/60">
-              Kurweball
+              KurweBall
             </span>
           </div>
           <div className="flex gap-8 text-sm text-white/30">
@@ -475,8 +475,8 @@ export default function LandingPage() {
             <a href="#how-it-works" className="transition-colors hover:text-white/60">How it works</a>
             <Link href="/login" className="transition-colors hover:text-white/60">Sign in</Link>
           </div>
-          <div className="text-sm text-white/20">
-            &copy; {new Date().getFullYear()} Kurweball. All rights reserved.
+          <div className="text-sm text-white/20" suppressHydrationWarning>
+            &copy; {new Date().getFullYear()} KurweBall. All rights reserved.
           </div>
         </div>
       </footer>

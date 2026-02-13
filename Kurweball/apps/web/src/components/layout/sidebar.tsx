@@ -19,6 +19,7 @@ import {
   X,
   Circle,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { usePermissions } from "@/hooks/use-permissions";
@@ -60,17 +61,22 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   return (
     <>
       {/* Mobile overlay */}
-      {open && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-          onClick={onClose}
-        />
-      )}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+            onClick={onClose}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-sidebar text-sidebar-foreground transition-transform duration-200 ease-in-out lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-gradient-to-b from-sidebar to-sidebar/95 text-sidebar-foreground transition-transform duration-200 ease-in-out lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
@@ -81,7 +87,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               <Circle className="h-4 w-4 text-primary-foreground" fill="currentColor" />
             </div>
             <span className="text-lg font-bold tracking-tight text-white">
-              Kurweball
+              KurweBall
             </span>
           </Link>
           <button
@@ -105,14 +111,23 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 href={item.href}
                 onClick={onClose}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                  "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-primary text-primary-foreground"
+                    ? "text-primary-foreground"
                     : "text-sidebar-muted hover:bg-sidebar-accent hover:text-white",
                 )}
               >
-                <item.icon className="h-5 w-5 shrink-0" />
-                {item.name}
+                {isActive && (
+                  <motion.div
+                    layoutId="sidebar-active"
+                    className="absolute inset-0 rounded-lg bg-primary"
+                    transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
+                  />
+                )}
+                <span className="relative flex items-center gap-3">
+                  <item.icon className="h-5 w-5 shrink-0" />
+                  {item.name}
+                </span>
               </Link>
             );
           })}
@@ -121,7 +136,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         {/* User section */}
         <div className="border-t border-sidebar-accent p-3">
           <div className="flex items-center gap-3 rounded-lg px-3 py-2.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-xs font-semibold text-blue-600">
               {initials}
             </div>
             <div className="min-w-0 flex-1">
