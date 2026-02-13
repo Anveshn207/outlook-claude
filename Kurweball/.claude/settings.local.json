@@ -25,7 +25,14 @@
       "mcp__context7__resolve-library-id",
       "mcp__context7__query-docs",
       "Bash(del \"C:\\\\Outlook Claude\\\\Kurweball\\\\apps\\\\api\\\\test-validation.ts\")",
-      "Bash(ssh:*)"
+      "Bash(ssh:*)",
+      "Bash(cd:*)",
+      "Bash(start:*)",
+      "Bash(where:*)",
+      "Bash(ngrok:*)",
+      "Bash(cloudflared:*)",
+      "Bash(winget install:*)",
+      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\cloudflared\\\\cloudflared.exe\" tunnel --url http://localhost:3000)"
     ]
   }
 }
