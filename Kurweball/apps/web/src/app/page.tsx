@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   ChevronDown,
   Sparkles,
+  Circle,
 } from "lucide-react";
 
 function AnimatedCounter({ target, suffix = "" }: { target: number; suffix?: string }) {
@@ -160,8 +161,8 @@ export default function LandingPage() {
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 font-bold text-white text-lg">
-              K
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600">
+              <Circle className="h-4 w-4 text-white" fill="currentColor" />
             </div>
             <span className="text-xl font-bold tracking-tight">
               Kurwe<span className="text-indigo-400">Ball</span>
@@ -466,8 +467,8 @@ export default function LandingPage() {
       <footer className="relative z-20 border-t border-white/5 py-12">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-6 md:flex-row">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 text-sm font-bold text-white">
-              K
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600">
+              <Circle className="h-4 w-4 text-white" fill="currentColor" />
             </div>
             <span className="font-semibold tracking-tight text-white/60">
               KurweBall

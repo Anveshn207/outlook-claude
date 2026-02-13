@@ -156,6 +156,7 @@ model Tenant {
   pipelineTemplates PipelineTemplate[]
   notifications     Notification[]
   inviteTokens      InviteToken[]
+  rolePermissions   RolePermission[]
 
   @@map("tenants")
 }
@@ -582,6 +583,20 @@ model InviteToken {
   @@index([tenantId])
   @@index([token])
   @@map("invite_tokens")
+}
+
+model RolePermission {
+  id          String   @id @default(cuid())
+  tenantId    String
+  role        UserRole
+  permissions Json     // String[] of enabled permission keys
+  updatedAt   DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, role])
+  @@index([tenantId])
+  @@map("role_permissions")
 }
 
 model RefreshToken {

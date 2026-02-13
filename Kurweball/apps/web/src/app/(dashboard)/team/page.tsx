@@ -97,11 +97,12 @@ export default function TeamPage() {
     }
   }, []);
 
+  const canReadUsers = can("users:read");
   useEffect(() => {
-    if (can("users:read")) {
+    if (canReadUsers) {
       fetchInvites();
     }
-  }, [fetchInvites, can]);
+  }, [fetchInvites, canReadUsers]);
 
   const fetchUsers = useCallback(
     async (params: {

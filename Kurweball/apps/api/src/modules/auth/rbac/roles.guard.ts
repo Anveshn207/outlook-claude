@@ -31,7 +31,9 @@ export class RolesGuard implements CanActivate {
     }
 
     const hasAll = requiredPermissions.every((permission) =>
-      hasPermission(user.role, permission),
+      user.permissions
+        ? user.permissions.includes(permission)
+        : hasPermission(user.role, permission),
     );
 
     if (!hasAll) {

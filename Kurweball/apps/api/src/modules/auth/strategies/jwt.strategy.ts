@@ -4,6 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Request } from 'express';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { RolePermissionsService } from '../../role-permissions/role-permissions.service';
 
 export interface JwtPayload {
   sub: string;
@@ -30,6 +31,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     configService: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly rolePermissionsService: RolePermissionsService,
   ) {
     super({
       jwtFromRequest: extractFromCookieOrHeader,
@@ -57,6 +59,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('User not found or inactive');
     }
 
-    return user;
+    const permissions =
+      await this.rolePermissionsService.getEffectivePermissions(
+        user.tenantId,
+        user.role,
+      );
+
+    return { ...user, permissions };
   }
 }

@@ -83,11 +83,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         {/* Logo / Brand */}
         <div className="flex h-16 items-center justify-between px-5">
           <Link href="/dashboard" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <Circle className="h-4 w-4 text-primary-foreground" fill="currentColor" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600">
+              <Circle className="h-4 w-4 text-white" fill="currentColor" />
             </div>
-            <span className="text-lg font-bold tracking-tight text-white">
-              KurweBall
+            <span className="text-xl font-bold tracking-tight text-white">
+              Kurwe<span className="text-indigo-400">Ball</span>
             </span>
           </Link>
           <button
