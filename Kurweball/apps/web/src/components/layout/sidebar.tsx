@@ -136,7 +136,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         {/* User section */}
         <div className="border-t border-sidebar-accent p-3">
           <div className="flex items-center gap-3 rounded-lg px-3 py-2.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-xs font-semibold text-blue-600">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-xs font-semibold text-white">
               {initials}
             </div>
             <div className="min-w-0 flex-1">
