@@ -32,7 +32,10 @@
       "Bash(ngrok:*)",
       "Bash(cloudflared:*)",
       "Bash(winget install:*)",
-      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\cloudflared\\\\cloudflared.exe\" tunnel --url http://localhost:3000)"
+      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\cloudflared\\\\cloudflared.exe\" tunnel --url http://localhost:3000)",
+      "Bash(cmd /c \"taskkill /PID 51700 /F\")",
+      "Bash(cmd /c \"for /f \"\"tokens=5\"\" %a in \\(''netstat -ano ^| findstr :3001 ^| findstr LISTENING''\\) do taskkill /PID %a /F\")",
+      "Bash(del \"C:\\\\Outlook Claude\\\\Kurweball\\\\test-registration.mjs\")"
     ]
   }
 }
