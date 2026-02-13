@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 interface UseNotificationStreamOptions {
   onNotification: (notification: Record<string, unknown>) => void;

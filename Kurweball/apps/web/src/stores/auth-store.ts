@@ -54,7 +54,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // Then verify the session is still valid via cookie-based /auth/me
     try {
       const API_URL =
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+        process.env.NEXT_PUBLIC_API_URL || "/api";
       const res = await fetch(`${API_URL}/auth/me`, {
         credentials: "include",
       });

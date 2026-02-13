@@ -116,7 +116,7 @@ export default function ReportsPage() {
     setExporting(type);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"}/reports/export/${type}`,
+        `${process.env.NEXT_PUBLIC_API_URL || "/api"}/reports/export/${type}`,
         {
           credentials: "include",
         }

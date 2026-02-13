@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+  process.env.NEXT_PUBLIC_API_URL || "/api";
 
 type ExportEntity = "candidates" | "jobs" | "clients" | "submissions";
 type ExportFormat = "csv" | "xlsx" | "docx";
