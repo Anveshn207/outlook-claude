@@ -211,7 +211,10 @@ export default function LandingPage() {
           </span>
           ,{" "}
           <br className="hidden sm:block" />
-          Scale Faster
+          Scale{" "}
+          <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+            Faster
+          </span>
         </h1>
 
         {/* Subtitle */}
