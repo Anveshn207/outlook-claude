@@ -151,7 +151,7 @@ export class AuthService {
 
   async login(dto: LoginDto): Promise<AuthResponse> {
     const user = await this.prisma.user.findFirst({
-      where: { email: dto.email },
+      where: { email: { equals: dto.email, mode: 'insensitive' } },
     });
 
     if (!user) {

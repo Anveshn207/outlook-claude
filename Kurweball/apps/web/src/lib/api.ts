@@ -84,10 +84,6 @@ export async function apiFetch<T = unknown>(
     throw new ApiError(401, "Unauthorized");
   }
 
-  if (response.status === 401) {
-    throw new ApiError(401, "Unauthorized");
-  }
-
   if (!response.ok) {
     const errorBody = await response.text();
     let message: string = errorBody;
