@@ -25,6 +25,7 @@ async function main() {
     prisma.contact.deleteMany(),
     prisma.client.deleteMany(),
     prisma.candidate.deleteMany(),
+    prisma.inviteToken.deleteMany(),
     prisma.user.deleteMany(),
     prisma.tenant.deleteMany(),
   ]);
