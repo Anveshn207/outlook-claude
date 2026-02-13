@@ -103,12 +103,16 @@ function ContactInfoTab() {
   const toast = useToast((s) => s.toast);
   const [firstName, setFirstName] = useState(user?.firstName || "");
   const [lastName, setLastName] = useState(user?.lastName || "");
+  const [email, setEmail] = useState(user?.email || "");
   const [saving, setSaving] = useState(false);
+
+  const isAdmin = user?.role === "ADMIN";
 
   useEffect(() => {
     if (user) {
       setFirstName(user.firstName);
       setLastName(user.lastName);
+      setEmail(user.email);
     }
   }, [user]);
 
@@ -116,14 +120,20 @@ function ContactInfoTab() {
     e.preventDefault();
     if (!firstName.trim() || !lastName.trim()) return;
 
+    const payload: Record<string, string> = {
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+    };
+
+    if (isAdmin && email.trim() !== user?.email) {
+      payload.email = email.trim();
+    }
+
     setSaving(true);
     try {
       await apiFetch(`/users/${user?.id}`, {
         method: "PATCH",
-        body: JSON.stringify({
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
-        }),
+        body: JSON.stringify(payload),
       });
 
       // Re-hydrate user store with updated data
@@ -169,11 +179,28 @@ function ContactInfoTab() {
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-muted-foreground">Email</Label>
-            <Input value={user?.email || ""} readOnly className="bg-muted" />
-            <p className="text-xs text-muted-foreground">
-              Email cannot be changed here. Contact an admin if needed.
-            </p>
+            <Label htmlFor="contact-email">Email</Label>
+            {isAdmin ? (
+              <>
+                <Input
+                  id="contact-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  As an admin, you can change your login email.
+                </p>
+              </>
+            ) : (
+              <>
+                <Input value={user?.email || ""} readOnly className="bg-muted" />
+                <p className="text-xs text-muted-foreground">
+                  Email cannot be changed here. Contact an admin if needed.
+                </p>
+              </>
+            )}
           </div>
           <Button type="submit" disabled={saving}>
             {saving ? "Saving..." : "Save Changes"}

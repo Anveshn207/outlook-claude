@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { Prisma, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -113,6 +113,16 @@ export class UsersService {
     }
 
     const updateData: Prisma.UserUpdateInput = {};
+
+    if (dto.email !== undefined && dto.email !== existing.email) {
+      const duplicate = await this.prisma.user.findFirst({
+        where: { tenantId, email: dto.email, id: { not: id } },
+      });
+      if (duplicate) {
+        throw new ConflictException('A user with this email already exists');
+      }
+      updateData.email = dto.email;
+    }
 
     if (dto.role !== undefined) updateData.role = dto.role as UserRole;
     if (dto.isActive !== undefined) updateData.isActive = dto.isActive;
