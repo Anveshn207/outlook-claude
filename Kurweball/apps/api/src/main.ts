@@ -11,7 +11,7 @@ async function bootstrap() {
 
   const corsOrigins = process.env.FRONTEND_URL
     ? process.env.FRONTEND_URL.split(',').map((u) => u.trim())
-    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'];
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://192.168.1.153:3000'];
   app.enableCors({
     origin: corsOrigins,
     credentials: true,
@@ -33,7 +33,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   const port = process.env.PORT || 3001;
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   console.log(`[API] Kurweball API running on http://localhost:${port}`);
 }
 

@@ -2,6 +2,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 interface ApiFetchOptions extends RequestInit {
   skipAuth?: boolean;
+  _isRetry?: boolean;
 }
 
 export class ApiError extends Error {
@@ -17,11 +18,35 @@ export class ApiError extends Error {
   }
 }
 
+let isRefreshing = false;
+let refreshPromise: Promise<boolean> | null = null;
+
+async function tryRefreshToken(): Promise<boolean> {
+  if (isRefreshing && refreshPromise) return refreshPromise;
+  isRefreshing = true;
+  refreshPromise = (async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      return res.ok;
+    } catch {
+      return false;
+    } finally {
+      isRefreshing = false;
+      refreshPromise = null;
+    }
+  })();
+  return refreshPromise;
+}
+
 export async function apiFetch<T = unknown>(
   path: string,
   options: ApiFetchOptions = {},
 ): Promise<T> {
-  const { skipAuth: _skipAuth = false, headers: customHeaders, ...rest } = options;
+  const { skipAuth: _skipAuth = false, _isRetry = false, headers: customHeaders, ...rest } = options;
   const method = (rest.method || "GET").toUpperCase();
 
   const headers: Record<string, string> = {
@@ -44,13 +69,22 @@ export async function apiFetch<T = unknown>(
     );
   }
 
-  if (response.status === 401) {
-    if (typeof window !== "undefined" && !path.startsWith("/auth/")) {
-      // Clear local user state and redirect
+  if (response.status === 401 && !_isRetry && !path.startsWith("/auth/")) {
+    // Try to refresh the token before giving up
+    const refreshed = await tryRefreshToken();
+    if (refreshed) {
+      return apiFetch<T>(path, { ...options, _isRetry: true });
+    }
+    // Refresh failed — log out
+    if (typeof window !== "undefined") {
       const { useAuthStore } = await import("@/stores/auth-store");
       useAuthStore.getState().logout();
       window.location.href = "/login";
     }
+    throw new ApiError(401, "Unauthorized");
+  }
+
+  if (response.status === 401) {
     throw new ApiError(401, "Unauthorized");
   }
 

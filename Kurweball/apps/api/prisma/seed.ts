@@ -50,13 +50,14 @@ async function main() {
   console.log('\nCreating users...');
   const passwordHash = await bcrypt.hash('password123', 12);
 
+  const adminPasswordHash = await bcrypt.hash('Admin123$', 12);
   const admin = await prisma.user.create({
     data: {
       tenantId: tenant.id,
-      email: 'admin@acme.com',
-      passwordHash,
-      firstName: 'John',
-      lastName: 'Smith',
+      email: 'anvesh.n@engineeringsquare.us',
+      passwordHash: adminPasswordHash,
+      firstName: 'Anvesh',
+      lastName: 'N',
       role: 'ADMIN',
       isActive: true,
     },
@@ -1767,7 +1768,7 @@ async function main() {
   console.log(`  Saved Views: ${savedViews.length}`);
   console.log(`  Notifications: ${notifications.length}`);
   console.log('\nLogin credentials:');
-  console.log('  admin@acme.com    / password123 (ADMIN)');
+  console.log('  anvesh.n@engineeringsquare.us / Admin123$ (ADMIN)');
   console.log('  sarah@acme.com    / password123 (RECRUITER)');
   console.log('  mike@acme.com     / password123 (RECRUITER)');
 }

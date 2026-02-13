@@ -56,9 +56,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const API_URL =
         process.env.NEXT_PUBLIC_API_URL || "/api";
-      const res = await fetch(`${API_URL}/auth/me`, {
+      let res = await fetch(`${API_URL}/auth/me`, {
         credentials: "include",
       });
+      // If 401, try refreshing the token first
+      if (res.status === 401) {
+        const refreshRes = await fetch(`${API_URL}/auth/refresh`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
+        if (refreshRes.ok) {
+          res = await fetch(`${API_URL}/auth/me`, {
+            credentials: "include",
+          });
+        }
+      }
       if (res.ok) {
         const data = await res.json();
         const user = data.user as AuthUser;
