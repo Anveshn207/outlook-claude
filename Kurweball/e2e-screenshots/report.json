@@ -1,0 +1,189 @@
+[
+  {
+    "test": "1. Landing Page",
+    "status": "WARNING",
+    "consoleErrors": [],
+    "notes": [
+      "VISIBLE: 500 / Internal Server Error on page",
+      "Title: \"KurweBall — Recruiting Platform\"",
+      "Hero: \"Hire Smarter, Scale Faster\""
+    ],
+    "screenshotFile": "C:\\Outlook Claude\\Kurweball\\e2e-screenshots\\01-landing-page.png",
+    "loadTimeMs": 5116
+  },
+  {
+    "test": "2. Login Flow",
+    "status": "PASS",
+    "consoleErrors": [],
+    "notes": [
+      "Login page loaded",
+      "Credentials filled",
+      "Redirected to: http://localhost:3000/dashboard",
+      "Successfully redirected to dashboard"
+    ],
+    "screenshotFile": "C:\\Outlook Claude\\Kurweball\\e2e-screenshots\\02c-login-redirect.png",
+    "loadTimeMs": 5780
+  },
+  {
+    "test": "3. Dashboard",
+    "status": "WARNING",
+    "consoleErrors": [
+      "[NotificationStream] Error: TypeError: network error"
+    ],
+    "notes": [
+      "VISIBLE: 500 / Internal Server Error on page",
+      "Card elements: 10",
+      "Headings: Dashboard, Welcome back, Anvesh!"
+    ],
+    "screenshotFile": "C:\\Outlook Claude\\Kurweball\\e2e-screenshots\\03-dashboard.png",
+    "loadTimeMs": 17300
+  },
+  {
+    "test": "4. Candidates",
+    "status": "WARNING",
+    "consoleErrors": [
+      "[NotificationStream] Error: TypeError: network error"
+    ],
+    "notes": [
+      "VISIBLE: 500 / Internal Server Error on page",
+      "Table rows: 21",
+      "Tables: 1"
+    ],
+    "screenshotFile": "C:\\Outlook Claude\\Kurweball\\e2e-screenshots\\04-candidates.png",
+    "loadTimeMs": 18330
+  },
+  {
+    "test": "5. Jobs",
+    "status": "WARNING",
+    "consoleErrors": [
+      "[NotificationStream] Error: TypeError: network error"
+    ],
+    "notes": [
+      "VISIBLE: 500 / Internal Server Error on page",
+      "Table rows: 8"
+    ],
+    "screenshotFile": "C:\\Outlook Claude\\Kurweball\\e2e-screenshots\\05-jobs.png",
+    "loadTimeMs": 17427
+  },
+  {
+    "test": "6. Clients",
+    "status": "WARNING",
+    "consoleErrors": [
+      "[NotificationStream] Error: TypeError: network error"
+    ],
+    "notes": [
+      "VISIBLE: 500 / Internal Server Error on page",
+      "Table rows: 6"
+    ],
+    "screenshotFile": "C:\\Outlook Claude\\Kurweball\\e2e-screenshots\\06-clients.png",
+    "loadTimeMs": 17360
+  },
+  {
+    "test": "7. Pipeline",
+    "status": "WARNING",
+    "consoleErrors": [
+      "[NotificationStream] Error: TypeError: network error"
+    ],
+    "notes": [
+      "VISIBLE: 500 / Internal Server Error on page",
+      "Kanban column elements: 2",
+      "Card elements: 2"
+    ],
+    "screenshotFile": "C:\\Outlook Claude\\Kurweball\\e2e-screenshots\\07-pipeline.png",
+    "loadTimeMs": 17502
+  },
+  {
+    "test": "8. Team",
+    "status": "WARNING",
+    "consoleErrors": [
+      "[NotificationStream] Error: TypeError: network error",
+      "Failed to load resource: the server responded with a status of 429 (Too Many Requests)",
+      "[API] 429 GET /invites Too many requests. Please try again later.",
+      "[TeamPage] Failed to fetch invites: ApiError: Too many requests. Please try again later.\n    at apiFetch (http://localhost:3000/_next/static/chunks/Kurweball_apps_web_src_5dc14075._.js:743:15)\n    at async TeamPage.useCallback[fetchInvites] (http://localhost:3000/_next/static/chunks/Kurweball_apps_web_src_e14596a6._.js:1728:30)"
+    ],
+    "notes": [
+      "VISIBLE: 500 / Internal Server Error on page",
+      "Table rows: 3",
+      "Invite/pending text elements: 2"
+    ],
+    "screenshotFile": "C:\\Outlook Claude\\Kurweball\\e2e-screenshots\\08-team.png",
+    "loadTimeMs": 16900
+  },
+  {
+    "test": "9. Account",
+    "status": "WARNING",
+    "consoleErrors": [
+      "[NotificationStream] Error: TypeError: network error"
+    ],
+    "notes": [
+      "VISIBLE: 500 / Internal Server Error on page",
+      "Input fields: 2",
+      "Avatar elements: 0"
+    ],
+    "screenshotFile": "C:\\Outlook Claude\\Kurweball\\e2e-screenshots\\09-account.png",
+    "loadTimeMs": 17453
+  },
+  {
+    "test": "10. Settings",
+    "status": "WARNING",
+    "consoleErrors": [
+      "[NotificationStream] Error: TypeError: network error"
+    ],
+    "notes": [
+      "VISIBLE: 500 / Internal Server Error on page",
+      "Section headings: Settings"
+    ],
+    "screenshotFile": "C:\\Outlook Claude\\Kurweball\\e2e-screenshots\\10-settings.png",
+    "loadTimeMs": 17410
+  },
+  {
+    "test": "11. Reports",
+    "status": "WARNING",
+    "consoleErrors": [
+      "[NotificationStream] Error: TypeError: network error"
+    ],
+    "notes": [
+      "VISIBLE: 500 / Internal Server Error on page",
+      "Chart/graph elements: 31"
+    ],
+    "screenshotFile": "C:\\Outlook Claude\\Kurweball\\e2e-screenshots\\11-reports.png",
+    "loadTimeMs": 17354
+  },
+  {
+    "test": "12. Search",
+    "status": "WARNING",
+    "consoleErrors": [
+      "[NotificationStream] Error: TypeError: network error"
+    ],
+    "notes": [
+      "VISIBLE: 500 / Internal Server Error on page",
+      "Search inputs: 2"
+    ],
+    "screenshotFile": "C:\\Outlook Claude\\Kurweball\\e2e-screenshots\\12-search.png",
+    "loadTimeMs": 17491
+  },
+  {
+    "test": "13. Calendar",
+    "status": "WARNING",
+    "consoleErrors": [
+      "[NotificationStream] Error: TypeError: network error"
+    ],
+    "notes": [
+      "VISIBLE: 500 / Internal Server Error on page",
+      "Calendar elements: 0"
+    ],
+    "screenshotFile": "C:\\Outlook Claude\\Kurweball\\e2e-screenshots\\13-calendar.png",
+    "loadTimeMs": 3254
+  },
+  {
+    "test": "14. Notifications",
+    "status": "PASS",
+    "consoleErrors": [],
+    "notes": [
+      "Bell found with: button:has(svg[class*=\"bell\"])",
+      "Dropdown/popover elements: 0"
+    ],
+    "screenshotFile": "C:\\Outlook Claude\\Kurweball\\e2e-screenshots\\14-notifications-open.png",
+    "loadTimeMs": 0
+  }
+]

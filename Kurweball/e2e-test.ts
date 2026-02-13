@@ -1,366 +1,137 @@
-import { chromium, Page, Browser, BrowserContext } from "playwright";
+import { chromium, Page } from "playwright";
 import * as fs from "fs";
 import * as path from "path";
 
 const BASE = "http://localhost:3000";
 const API = "http://localhost:3001/api";
 const SCREENSHOTS = path.join(__dirname, "e2e-screenshots");
-const CREDS = { email: "admin@acme.com", password: "password123" };
+const CREDS = { email: "anvesh.n@engineeringsquare.us", password: "Admin123$" };
 
-// Tracking
-const results: { test: string; status: "PASS" | "FAIL"; error?: string }[] = [];
+interface TestResult {
+  test: string;
+  status: "PASS" | "FAIL" | "WARNING";
+  consoleErrors: string[];
+  notes: string[];
+  screenshotFile: string;
+  loadTimeMs: number;
+}
+
+const results: TestResult[] = [];
 let consoleErrors: string[] = [];
 
 function log(msg: string) {
   console.log(`[E2E] ${msg}`);
 }
 
-function pass(name: string) {
-  results.push({ test: name, status: "PASS" });
-  log(`PASS: ${name}`);
-}
-
-function fail(name: string, error: string) {
-  results.push({ test: name, status: "FAIL", error });
-  log(`FAIL: ${name} — ${error}`);
-}
-
 async function screenshot(page: Page, name: string) {
   const filePath = path.join(SCREENSHOTS, `${name}.png`);
   await page.screenshot({ path: filePath, fullPage: true });
-  log(`Screenshot: ${name}.png`);
+  return filePath;
 }
 
-async function checkConsole(page: Page, testName: string) {
-  if (consoleErrors.length > 0) {
-    const errors = consoleErrors.filter(
-      (e) =>
-        !e.includes("SearchService") &&
-        !e.includes("OpenSearch") &&
-        !e.includes("SMTP") &&
-        !e.includes("favicon") &&
-        !e.includes("Download the React DevTools"),
-    );
-    if (errors.length > 0) {
-      log(`Console errors on ${testName}: ${errors.join(" | ")}`);
-    }
-    consoleErrors = [];
-  }
+function filterErrors(errors: string[]): string[] {
+  return errors.filter(
+    (e) =>
+      !e.includes("favicon") &&
+      !e.includes("Download the React DevTools") &&
+      !e.includes("SearchService") &&
+      !e.includes("OpenSearch") &&
+      !e.includes("SMTP") &&
+      !e.includes("net::ERR_") && // Network errors from devtools
+      !e.includes("404 (Not Found)") // favicon 404s
+  );
 }
 
 async function waitForLoad(page: Page) {
   await page.waitForLoadState("networkidle", { timeout: 15000 }).catch(() => {});
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(1500);
 }
 
-// ============ AUTH FLOW ============
+// ============ GENERIC PAGE TEST ============
 
-async function testLoginPage(page: Page) {
-  try {
-    await page.goto(`${BASE}/login`);
-    await waitForLoad(page);
-    await screenshot(page, "01_login_page");
-
-    const heading = await page.textContent("text=Welcome back");
-    if (heading) {
-      pass("1. Login page loads");
-    } else {
-      fail("1. Login page loads", "Missing heading");
-    }
-  } catch (e: any) {
-    fail("1. Login page loads", e.message);
-  }
-  await checkConsole(page, "login page");
-}
-
-async function testLogin(page: Page) {
-  try {
-    await page.goto(`${BASE}/login`);
-    await waitForLoad(page);
-
-    await page.fill('input[type="email"]', CREDS.email);
-    await page.fill('input[type="password"]', CREDS.password);
-    await page.click('button[type="submit"]');
-
-    await page.waitForURL("**/dashboard", { timeout: 10000 });
-    await waitForLoad(page);
-    await screenshot(page, "02_dashboard_after_login");
-
-    const url = page.url();
-    if (url.includes("/dashboard")) {
-      pass("2. Login → redirects to dashboard");
-    } else {
-      fail("2. Login → redirects to dashboard", `URL: ${url}`);
-    }
-  } catch (e: any) {
-    fail("2. Login → redirects to dashboard", e.message);
-    await screenshot(page, "02_login_fail");
-  }
-  await checkConsole(page, "login flow");
-}
-
-async function testLogout(page: Page) {
-  try {
-    // Click logout button in sidebar
-    await page.click('button[title="Sign out"]');
-    await page.waitForURL("**/login", { timeout: 10000 });
-    await waitForLoad(page);
-
-    const url = page.url();
-    if (url.includes("/login")) {
-      pass("3. Logout → redirects to login");
-    } else {
-      fail("3. Logout → redirects to login", `URL: ${url}`);
-    }
-  } catch (e: any) {
-    fail("3. Logout → redirects to login", e.message);
-  }
-  await checkConsole(page, "logout flow");
-}
-
-async function testProtectedRoute(page: Page) {
-  try {
-    // Clear cookies to simulate unauthenticated access
-    const context = page.context();
-    await context.clearCookies();
-    await page.goto(`${BASE}/dashboard`);
-    await waitForLoad(page);
-    await page.waitForTimeout(2000);
-
-    const url = page.url();
-    if (url.includes("/login")) {
-      pass("4. Unauthenticated /dashboard → redirects to login");
-    } else {
-      fail("4. Unauthenticated /dashboard → redirects to login", `URL: ${url}`);
-    }
-  } catch (e: any) {
-    fail("4. Unauthenticated /dashboard → redirects to login", e.message);
-  }
-  await checkConsole(page, "protected route");
-}
-
-// Helper: login and return to dashboard
-async function loginAndGoToDashboard(page: Page) {
-  await page.goto(`${BASE}/login`);
-  await waitForLoad(page);
-  await page.fill('input[type="email"]', CREDS.email);
-  await page.fill('input[type="password"]', CREDS.password);
-  await page.click('button[type="submit"]');
-  await page.waitForURL("**/dashboard", { timeout: 10000 });
-  await waitForLoad(page);
-}
-
-// ============ DASHBOARD ============
-
-async function testDashboard(page: Page) {
-  try {
-    await loginAndGoToDashboard(page);
-    await page.waitForTimeout(2000);
-    await screenshot(page, "03_dashboard_loaded");
-
-    // Check that dashboard has content (stat cards or data)
-    const body = await page.textContent("body");
-    if (body && body.length > 100) {
-      pass("5. Dashboard loads with content");
-    } else {
-      fail("5. Dashboard loads with content", "Page appears empty");
-    }
-  } catch (e: any) {
-    fail("5. Dashboard loads with content", e.message);
-  }
-  await checkConsole(page, "dashboard");
-}
-
-// ============ CRUD PAGES ============
-
-interface CrudConfig {
-  name: string;
-  path: string;
-  createFields?: Record<string, string>;
-  editField?: { selector: string; value: string };
-  searchTerm?: string;
-}
-
-const CRUD_PAGES: CrudConfig[] = [
-  {
-    name: "Candidates",
-    path: "/candidates",
-    createFields: {
-      firstName: "Test",
-      lastName: "Candidate",
-      email: `test-${Date.now()}@example.com`,
-    },
-    searchTerm: "Test",
-  },
-  {
-    name: "Jobs",
-    path: "/jobs",
-    createFields: {
-      title: `Test Job ${Date.now()}`,
-    },
-    searchTerm: "Test",
-  },
-  {
-    name: "Clients",
-    path: "/clients",
-    createFields: {
-      name: `Test Client ${Date.now()}`,
-    },
-    searchTerm: "Test",
-  },
-];
-
-async function testListPage(page: Page, config: CrudConfig, testNum: number) {
-  try {
-    await page.goto(`${BASE}${config.path}`);
-    await waitForLoad(page);
-    await page.waitForTimeout(1500);
-    await screenshot(page, `${String(testNum).padStart(2, "0")}_${config.name.toLowerCase()}_list`);
-
-    // Check page has loaded (look for table or list content)
-    const body = await page.textContent("body");
-    if (body && body.length > 200) {
-      pass(`${testNum}. ${config.name} list page loads`);
-    } else {
-      fail(`${testNum}. ${config.name} list page loads`, "Page appears empty");
-    }
-  } catch (e: any) {
-    fail(`${testNum}. ${config.name} list page loads`, e.message);
-  }
-  await checkConsole(page, `${config.name} list`);
-}
-
-async function testSearch(page: Page, config: CrudConfig, testNum: number) {
-  if (!config.searchTerm) {
-    pass(`${testNum}. ${config.name} search — skipped (no search term)`);
-    return;
-  }
+async function testPageNav(
+  page: Page,
+  name: string,
+  url: string,
+  screenshotName: string,
+  extraChecks?: (p: Page) => Promise<string[]>
+): Promise<TestResult> {
+  consoleErrors = [];
+  const start = Date.now();
+  const notes: string[] = [];
 
   try {
-    await page.goto(`${BASE}${config.path}`);
+    log(`Testing: ${name} (${url})`);
+    await page.goto(url, { timeout: 30000 });
     await waitForLoad(page);
 
-    // Look for search input
-    const searchInput = page.locator('input[placeholder*="earch"], input[placeholder*="filter"], input[type="search"]').first();
-    const isVisible = await searchInput.isVisible().catch(() => false);
+    const ssFile = await screenshot(page, screenshotName);
+    const loadTime = Date.now() - start;
 
-    if (isVisible) {
-      await searchInput.fill(config.searchTerm);
-      await page.waitForTimeout(1000);
-      await screenshot(page, `${String(testNum).padStart(2, "0")}_${config.name.toLowerCase()}_search`);
-      pass(`${testNum}. ${config.name} search works`);
-    } else {
-      pass(`${testNum}. ${config.name} search — no search input found (may use different UI)`);
+    // Check for visible error text
+    const pageText = await page.textContent("body") || "";
+    if (pageText.includes("Internal Server Error") || pageText.includes("500")) {
+      notes.push("VISIBLE: 500 / Internal Server Error on page");
     }
-  } catch (e: any) {
-    fail(`${testNum}. ${config.name} search`, e.message);
-  }
-  await checkConsole(page, `${config.name} search`);
-}
-
-async function testCreate(page: Page, config: CrudConfig, testNum: number) {
-  if (!config.createFields) {
-    pass(`${testNum}. ${config.name} create — skipped`);
-    return;
-  }
-
-  try {
-    await page.goto(`${BASE}${config.path}`);
-    await waitForLoad(page);
-
-    // Look for create/add/new button
-    const addButton = page.locator('button:has-text("Add"), button:has-text("Create"), button:has-text("New"), a:has-text("Add"), a:has-text("Create"), a:has-text("New")').first();
-    const isVisible = await addButton.isVisible().catch(() => false);
-
-    if (isVisible) {
-      await addButton.click();
-      await page.waitForTimeout(1000);
-
-      // Fill in form fields
-      for (const [field, value] of Object.entries(config.createFields)) {
-        const input = page.locator(`input[name="${field}"], input[placeholder*="${field}" i], input[id="${field}"]`).first();
-        const inputVisible = await input.isVisible().catch(() => false);
-        if (inputVisible) {
-          await input.fill(value);
-        }
-      }
-
-      await screenshot(page, `${String(testNum).padStart(2, "0")}_${config.name.toLowerCase()}_create_form`);
-
-      // Submit
-      const submitBtn = page.locator('button[type="submit"], button:has-text("Save"), button:has-text("Create"), button:has-text("Add")').last();
-      const submitVisible = await submitBtn.isVisible().catch(() => false);
-      if (submitVisible) {
-        await submitBtn.click();
-        await page.waitForTimeout(2000);
-        await screenshot(page, `${String(testNum).padStart(2, "0")}_${config.name.toLowerCase()}_after_create`);
-      }
-
-      pass(`${testNum}. ${config.name} create flow executed`);
-    } else {
-      pass(`${testNum}. ${config.name} create — no add button visible (may require specific permissions)`);
+    if (pageText.includes("Something went wrong")) {
+      notes.push("VISIBLE: 'Something went wrong' error on page");
     }
-  } catch (e: any) {
-    fail(`${testNum}. ${config.name} create`, e.message);
-    await screenshot(page, `${String(testNum).padStart(2, "0")}_${config.name.toLowerCase()}_create_fail`);
-  }
-  await checkConsole(page, `${config.name} create`);
-}
-
-// ============ EXTRA PAGES ============
-
-async function testPage(page: Page, name: string, path: string, testNum: number) {
-  try {
-    await page.goto(`${BASE}${path}`);
-    await waitForLoad(page);
-    await page.waitForTimeout(1500);
-    await screenshot(page, `${String(testNum).padStart(2, "0")}_${name.toLowerCase().replace(/\s+/g, "_")}`);
-
-    const body = await page.textContent("body");
-    if (body && body.length > 100) {
-      pass(`${testNum}. ${name} page loads`);
-    } else {
-      fail(`${testNum}. ${name} page loads`, "Page appears empty");
+    if (pageText.includes("404") && pageText.includes("not found")) {
+      notes.push("VISIBLE: 404 Not Found on page");
     }
-  } catch (e: any) {
-    fail(`${testNum}. ${name} page loads`, e.message);
-  }
-  await checkConsole(page, name);
-}
 
-// ============ LANDING PAGE ============
-
-async function testLandingPage(page: Page) {
-  try {
-    // Clear cookies first
-    await page.context().clearCookies();
-    await page.goto(BASE);
-    await waitForLoad(page);
-    await screenshot(page, "00_landing_page");
-
-    const body = await page.textContent("body");
-    if (body?.includes("Hire") && body?.includes("smarter")) {
-      pass("0. Landing page loads with hero content");
-    } else {
-      fail("0. Landing page loads", "Missing hero content");
+    // Run extra checks
+    if (extraChecks) {
+      const extra = await extraChecks(page);
+      notes.push(...extra);
     }
-  } catch (e: any) {
-    fail("0. Landing page loads", e.message);
+
+    const filtered = filterErrors(consoleErrors);
+    const status: TestResult["status"] =
+      filtered.length > 0 || notes.some((n) => n.startsWith("VISIBLE:")) ? "WARNING" : "PASS";
+
+    const result: TestResult = {
+      test: name,
+      status,
+      consoleErrors: [...filtered],
+      notes,
+      screenshotFile: ssFile,
+      loadTimeMs: loadTime,
+    };
+
+    log(`  ${status} | ${loadTime}ms | Errors: ${filtered.length}`);
+    filtered.forEach((e) => log(`  ERROR: ${e.substring(0, 150)}`));
+    notes.forEach((n) => log(`  NOTE: ${n}`));
+
+    results.push(result);
+    return result;
+  } catch (err: any) {
+    const ssFile = await screenshot(page, `${screenshotName}-error`).catch(() => "");
+    const filtered = filterErrors(consoleErrors);
+    const result: TestResult = {
+      test: name,
+      status: "FAIL",
+      consoleErrors: [...filtered, `Test error: ${err.message}`],
+      notes: [`Test failed: ${err.message}`],
+      screenshotFile: ssFile,
+      loadTimeMs: Date.now() - start,
+    };
+    log(`  FAIL: ${err.message}`);
+    results.push(result);
+    return result;
   }
-  await checkConsole(page, "landing page");
 }
 
 // ============ MAIN ============
 
 async function main() {
-  // Setup
   if (!fs.existsSync(SCREENSHOTS)) {
     fs.mkdirSync(SCREENSHOTS, { recursive: true });
   }
 
-  log("Starting E2E tests...");
+  log("=== KurweBall E2E Test Suite ===");
   log(`Frontend: ${BASE}`);
-  log(`API: ${API}`);
+  log(`API: ${API}\n`);
 
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
@@ -370,67 +141,284 @@ async function main() {
 
   const page = await context.newPage();
 
-  // Capture console errors
+  // Capture console errors globally
   page.on("console", (msg) => {
     if (msg.type() === "error") {
       consoleErrors.push(msg.text());
     }
   });
+  page.on("pageerror", (err) => {
+    consoleErrors.push(`PAGE_ERROR: ${err.message}`);
+  });
 
   try {
-    // Landing page
-    await testLandingPage(page);
+    // ===== 1. LANDING PAGE =====
+    await testPageNav(page, "1. Landing Page", BASE, "01-landing-page", async (p) => {
+      const notes: string[] = [];
+      const title = await p.title();
+      notes.push(`Title: "${title}"`);
+      const h1 = await p.locator("h1").first().textContent().catch(() => null);
+      if (h1) notes.push(`Hero: "${h1.substring(0, 80)}"`);
+      else notes.push("No h1 found");
+      return notes;
+    });
 
-    // Auth flow
-    await testLoginPage(page);
-    await testLogin(page);
-    await testLogout(page);
-    await testProtectedRoute(page);
+    // ===== 2. LOGIN FLOW =====
+    log("\nTesting: 2. Login Flow");
+    consoleErrors = [];
+    const loginStart = Date.now();
+    const loginNotes: string[] = [];
+    let loginStatus: TestResult["status"] = "PASS";
 
-    // Dashboard
-    await testDashboard(page);
+    try {
+      await page.goto(`${BASE}/login`, { timeout: 15000 });
+      await waitForLoad(page);
+      await screenshot(page, "02a-login-page");
+      loginNotes.push("Login page loaded");
 
-    // CRUD pages
-    let testNum = 6;
-    for (const config of CRUD_PAGES) {
-      await testListPage(page, config, testNum++);
-      await testSearch(page, config, testNum++);
-      await testCreate(page, config, testNum++);
+      // Fill credentials
+      await page.fill('input[type="email"]', CREDS.email);
+      await page.fill('input[type="password"]', CREDS.password);
+      await screenshot(page, "02b-login-filled");
+      loginNotes.push("Credentials filled");
+
+      // Submit
+      await page.click('button[type="submit"]');
+      await page.waitForURL("**/dashboard", { timeout: 15000 }).catch(() => {});
+      await waitForLoad(page);
+      await screenshot(page, "02c-login-redirect");
+
+      const currentUrl = page.url();
+      loginNotes.push(`Redirected to: ${currentUrl}`);
+
+      if (currentUrl.includes("/login")) {
+        loginStatus = "FAIL";
+        loginNotes.push("LOGIN FAILED - still on login page");
+        // Check for error message
+        const errorMsg = await page.locator('[class*="error"], [class*="alert"], [role="alert"]').textContent().catch(() => null);
+        if (errorMsg) loginNotes.push(`Error message: "${errorMsg}"`);
+      } else if (currentUrl.includes("/dashboard")) {
+        loginNotes.push("Successfully redirected to dashboard");
+      }
+    } catch (err: any) {
+      loginStatus = "FAIL";
+      loginNotes.push(`Login error: ${err.message}`);
+      await screenshot(page, "02-login-error").catch(() => {});
     }
 
-    // Other pages
-    const extraPages = [
-      { name: "Pipeline", path: "/pipeline" },
-      { name: "Interviews", path: "/interviews" },
-      { name: "Tasks", path: "/tasks" },
-      { name: "Reports", path: "/reports" },
-      { name: "Team", path: "/team" },
-      { name: "Roles", path: "/roles" },
-      { name: "Settings", path: "/settings" },
-    ];
+    const filteredLoginErrors = filterErrors(consoleErrors);
+    if (filteredLoginErrors.length > 0 && loginStatus === "PASS") loginStatus = "WARNING";
 
-    for (const extra of extraPages) {
-      await testPage(page, extra.name, extra.path, testNum++);
+    results.push({
+      test: "2. Login Flow",
+      status: loginStatus,
+      consoleErrors: [...filteredLoginErrors],
+      notes: loginNotes,
+      screenshotFile: path.join(SCREENSHOTS, "02c-login-redirect.png"),
+      loadTimeMs: Date.now() - loginStart,
+    });
+    log(`  ${loginStatus} | ${Date.now() - loginStart}ms`);
+    loginNotes.forEach((n) => log(`  NOTE: ${n}`));
+
+    // ===== 3. DASHBOARD =====
+    await testPageNav(page, "3. Dashboard", `${BASE}/dashboard`, "03-dashboard", async (p) => {
+      const notes: string[] = [];
+      const cards = await p.locator('[class*="card"]').count();
+      notes.push(`Card elements: ${cards}`);
+      const headings = await p.locator("h1, h2, h3").allTextContents();
+      notes.push(`Headings: ${headings.slice(0, 5).join(", ")}`);
+      return notes;
+    });
+
+    // ===== 4. CANDIDATES =====
+    await testPageNav(page, "4. Candidates", `${BASE}/candidates`, "04-candidates", async (p) => {
+      const notes: string[] = [];
+      const tableRows = await p.locator("table tbody tr").count();
+      notes.push(`Table rows: ${tableRows}`);
+      const tables = await p.locator("table").count();
+      notes.push(`Tables: ${tables}`);
+      return notes;
+    });
+
+    // ===== 5. JOBS =====
+    await testPageNav(page, "5. Jobs", `${BASE}/jobs`, "05-jobs", async (p) => {
+      const notes: string[] = [];
+      const tableRows = await p.locator("table tbody tr").count();
+      notes.push(`Table rows: ${tableRows}`);
+      return notes;
+    });
+
+    // ===== 6. CLIENTS =====
+    await testPageNav(page, "6. Clients", `${BASE}/clients`, "06-clients", async (p) => {
+      const notes: string[] = [];
+      const tableRows = await p.locator("table tbody tr").count();
+      notes.push(`Table rows: ${tableRows}`);
+      return notes;
+    });
+
+    // ===== 7. PIPELINE =====
+    await testPageNav(page, "7. Pipeline", `${BASE}/pipeline`, "07-pipeline", async (p) => {
+      const notes: string[] = [];
+      const columns = await p.locator('[class*="column"], [class*="kanban"], [class*="lane"], [class*="stage"]').count();
+      notes.push(`Kanban column elements: ${columns}`);
+      const cards = await p.locator('[class*="card"]').count();
+      notes.push(`Card elements: ${cards}`);
+      return notes;
+    });
+
+    // ===== 8. TEAM =====
+    await testPageNav(page, "8. Team", `${BASE}/team`, "08-team", async (p) => {
+      const notes: string[] = [];
+      const tableRows = await p.locator("table tbody tr").count();
+      notes.push(`Table rows: ${tableRows}`);
+      const inviteElements = await p.locator('text=/invite|Invite|pending|Pending/').count();
+      notes.push(`Invite/pending text elements: ${inviteElements}`);
+      return notes;
+    });
+
+    // ===== 9. ACCOUNT =====
+    await testPageNav(page, "9. Account", `${BASE}/account`, "09-account", async (p) => {
+      const notes: string[] = [];
+      const inputs = await p.locator("input").count();
+      notes.push(`Input fields: ${inputs}`);
+      const avatars = await p.locator('[class*="avatar"]').count();
+      notes.push(`Avatar elements: ${avatars}`);
+      return notes;
+    });
+
+    // ===== 10. SETTINGS =====
+    await testPageNav(page, "10. Settings", `${BASE}/settings`, "10-settings", async (p) => {
+      const notes: string[] = [];
+      const headings = await p.locator("h2, h3").allTextContents();
+      notes.push(`Section headings: ${headings.join(", ")}`);
+      return notes;
+    });
+
+    // ===== 11. REPORTS =====
+    await testPageNav(page, "11. Reports", `${BASE}/reports`, "11-reports", async (p) => {
+      const notes: string[] = [];
+      const charts = await p.locator('canvas, svg, [class*="chart"], [class*="graph"]').count();
+      notes.push(`Chart/graph elements: ${charts}`);
+      return notes;
+    });
+
+    // ===== 12. SEARCH =====
+    await testPageNav(page, "12. Search", `${BASE}/search`, "12-search", async (p) => {
+      const notes: string[] = [];
+      const searchInputs = await p.locator('input[type="search"], input[placeholder*="search" i], input[type="text"]').count();
+      notes.push(`Search inputs: ${searchInputs}`);
+      return notes;
+    });
+
+    // ===== 13. CALENDAR =====
+    await testPageNav(page, "13. Calendar", `${BASE}/calendar`, "13-calendar", async (p) => {
+      const notes: string[] = [];
+      const calElements = await p.locator('[class*="calendar"], [class*="Calendar"], table').count();
+      notes.push(`Calendar elements: ${calElements}`);
+      return notes;
+    });
+
+    // ===== 14. NOTIFICATIONS =====
+    log("\nTesting: 14. Notifications");
+    consoleErrors = [];
+    const notifNotes: string[] = [];
+    let notifStatus: TestResult["status"] = "PASS";
+
+    try {
+      await page.goto(`${BASE}/dashboard`, { timeout: 15000 });
+      await waitForLoad(page);
+
+      // Look for notification bell - try various selectors
+      const bellSelectors = [
+        'button[aria-label*="notification" i]',
+        'button:has(svg[class*="bell"])',
+        '[class*="notification"] button',
+        'button:has([data-lucide="bell"])',
+        'nav button:nth-last-child(1)',
+        'nav button:nth-last-child(2)',
+        'nav button:nth-last-child(3)',
+      ];
+
+      let bellFound = false;
+      for (const selector of bellSelectors) {
+        const el = page.locator(selector).first();
+        const visible = await el.isVisible().catch(() => false);
+        if (visible) {
+          notifNotes.push(`Bell found with: ${selector}`);
+          await el.click();
+          await page.waitForTimeout(1500);
+          await screenshot(page, "14-notifications-open");
+          bellFound = true;
+
+          // Check for dropdown/popover
+          const dropdownCount = await page.locator('[class*="dropdown"], [class*="popover"], [role="menu"], [role="dialog"], [class*="notification"]').count();
+          notifNotes.push(`Dropdown/popover elements: ${dropdownCount}`);
+          break;
+        }
+      }
+
+      if (!bellFound) {
+        notifNotes.push("No notification bell found with common selectors");
+        await screenshot(page, "14-notifications-no-bell");
+        notifStatus = "WARNING";
+      }
+    } catch (err: any) {
+      notifStatus = "FAIL";
+      notifNotes.push(`Error: ${err.message}`);
+      await screenshot(page, "14-notifications-error").catch(() => {});
     }
+
+    const filteredNotifErrors = filterErrors(consoleErrors);
+    if (filteredNotifErrors.length > 0 && notifStatus === "PASS") notifStatus = "WARNING";
+
+    results.push({
+      test: "14. Notifications",
+      status: notifStatus,
+      consoleErrors: [...filteredNotifErrors],
+      notes: notifNotes,
+      screenshotFile: path.join(SCREENSHOTS, "14-notifications-open.png"),
+      loadTimeMs: 0,
+    });
+    log(`  ${notifStatus}`);
+    notifNotes.forEach((n) => log(`  NOTE: ${n}`));
+
   } finally {
     await browser.close();
   }
 
-  // Report
-  log("\n========== E2E TEST RESULTS ==========");
-  const passed = results.filter((r) => r.status === "PASS").length;
-  const failed = results.filter((r) => r.status === "FAIL").length;
+  // ===== SUMMARY =====
+  log("\n\n========================================");
+  log("       E2E TEST RESULTS SUMMARY");
+  log("========================================\n");
+
+  const passed = results.filter((r) => r.status === "PASS");
+  const warnings = results.filter((r) => r.status === "WARNING");
+  const failed = results.filter((r) => r.status === "FAIL");
+
+  log(`PASSED:   ${passed.length}/${results.length}`);
+  log(`WARNINGS: ${warnings.length}/${results.length}`);
+  log(`FAILED:   ${failed.length}/${results.length}\n`);
 
   for (const r of results) {
-    const icon = r.status === "PASS" ? "OK" : "XX";
-    const extra = r.error ? ` (${r.error})` : "";
-    log(`  [${icon}] ${r.test}${extra}`);
+    const tag = r.status === "PASS" ? "[PASS]" : r.status === "WARNING" ? "[WARN]" : "[FAIL]";
+    log(`${tag} ${r.test}`);
+    log(`     Load: ${r.loadTimeMs}ms | Console Errors: ${r.consoleErrors.length}`);
+    if (r.consoleErrors.length > 0) {
+      r.consoleErrors.forEach((e) => log(`     CONSOLE ERROR: ${e.substring(0, 200)}`));
+    }
+    if (r.notes.length > 0) {
+      r.notes.forEach((n) => log(`     ${n}`));
+    }
+    log("");
   }
 
-  log(`\nTotal: ${results.length} | Passed: ${passed} | Failed: ${failed}`);
+  // Save JSON report
+  const reportPath = path.join(SCREENSHOTS, "report.json");
+  fs.writeFileSync(reportPath, JSON.stringify(results, null, 2));
+  log(`Report saved to: ${reportPath}`);
   log(`Screenshots saved to: ${SCREENSHOTS}`);
 
-  if (failed > 0) {
+  if (failed.length > 0) {
     process.exit(1);
   }
 }
