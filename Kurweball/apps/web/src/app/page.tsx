@@ -207,11 +207,11 @@ export default function LandingPage() {
         <h1 className="landing-fade-up landing-delay-1 max-w-4xl text-5xl font-extrabold leading-[1.1] tracking-tight md:text-7xl lg:text-8xl">
           Hire{" "}
           <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-            smarter
+            Smarter
           </span>
           ,{" "}
           <br className="hidden sm:block" />
-          not harder
+          Scale Faster
         </h1>
 
         {/* Subtitle */}
