@@ -10,6 +10,7 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../auth/rbac';
+import { Public } from '../auth/decorators/public.decorator';
 import { InvitesService } from './invites.service';
 import { CreateInviteDto } from './dto/create-invite.dto';
 
@@ -37,6 +38,7 @@ export class InvitesController {
     return { message: 'Invite deleted' };
   }
 
+  @Public()
   @Get('validate/:token')
   async validateToken(@Param('token') token: string) {
     const invite = await this.invitesService.validateToken(token);

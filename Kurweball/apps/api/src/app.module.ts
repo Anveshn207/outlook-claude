@@ -23,6 +23,7 @@ import { ImportExportModule } from './modules/import-export/import-export.module
 import { HealthModule } from './modules/health/health.module';
 import { InvitesModule } from './modules/invites/invites.module';
 import { RolesGuard } from './modules/auth/rbac/roles.guard';
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { RequestLoggerMiddleware } from './common/middleware';
 import { validate } from './common/env.validation';
 
@@ -56,6 +57,7 @@ import { validate } from './common/env.validation';
     InvitesModule,
   ],
   providers: [
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],

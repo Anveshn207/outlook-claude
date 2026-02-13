@@ -14,6 +14,7 @@ import {
   UsersRound,
   Upload,
   Settings,
+  ShieldCheck,
   LogOut,
   X,
   Circle,
@@ -34,6 +35,7 @@ const navigation: { name: string; href: string; icon: typeof LayoutDashboard; pe
   { name: "Reports", href: "/reports", icon: BarChart3, permission: "reports:read" },
   { name: "Import", href: "/import", icon: Upload, permission: "import-export:create" },
   { name: "Team", href: "/team", icon: UsersRound, permission: "users:read" },
+  { name: "Roles", href: "/roles", icon: ShieldCheck, permission: "users:read" },
   { name: "Settings", href: "/settings", icon: Settings, permission: "settings:read" },
 ];
 

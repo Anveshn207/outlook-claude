@@ -19,11 +19,13 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { RegisterWithInviteDto } from './dto/register-with-invite.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
+import { Public } from './decorators/public.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('register')
   @Throttle({ default: { ttl: 60000, limit: 3 } })
   async register(
@@ -41,6 +43,7 @@ export class AuthController {
     return { user: result.user };
   }
 
+  @Public()
   @Post('register-with-invite')
   @Throttle({ default: { ttl: 60000, limit: 5 } })
   async registerWithInvite(
@@ -52,6 +55,7 @@ export class AuthController {
     return { user: result.user };
   }
 
+  @Public()
   @Post('login')
   @Throttle({ default: { ttl: 60000, limit: 5 } })
   @HttpCode(HttpStatus.OK)
@@ -64,6 +68,7 @@ export class AuthController {
     return { user: result.user };
   }
 
+  @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refresh(
