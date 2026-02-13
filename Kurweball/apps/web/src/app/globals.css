@@ -15,6 +15,8 @@
   --color-accent-foreground: #0f172a;
   --color-card: #ffffff;
   --color-card-foreground: #0f172a;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0f172a;
   --color-border: #e2e8f0;
   --color-input: #e2e8f0;
   --color-ring: #6366f1;
@@ -47,6 +49,8 @@ body {
   --color-accent-foreground: #f1f5f9;
   --color-card: #12121e;
   --color-card-foreground: #f1f5f9;
+  --color-popover: #12121e;
+  --color-popover-foreground: #f1f5f9;
   --color-border: #252538;
   --color-input: #252538;
   --color-ring: #818cf8;
