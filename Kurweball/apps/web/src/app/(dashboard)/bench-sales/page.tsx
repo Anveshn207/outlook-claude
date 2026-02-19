@@ -6,6 +6,7 @@ import {
   Filter,
   Columns3,
   X,
+  Plus,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
@@ -19,6 +20,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -28,6 +31,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import {
   Popover,
   PopoverContent,
@@ -98,8 +109,54 @@ interface ColumnDef {
   key: keyof BenchSalesRecord;
   header: string;
   defaultVisible: boolean;
-  width?: string;
 }
+
+// ─── Form field definitions for the Add dialog ──────────────────────────────
+
+interface FormFieldDef {
+  key: string;
+  label: string;
+  type: "text" | "textarea" | "date";
+  required?: boolean;
+  placeholder?: string;
+}
+
+const FORM_FIELDS: FormFieldDef[] = [
+  { key: "consultant", label: "Consultant", type: "text", required: true, placeholder: "Consultant name" },
+  { key: "vendor", label: "Vendor", type: "text", placeholder: "Vendor company" },
+  { key: "client", label: "Client", type: "text", placeholder: "Client company" },
+  { key: "position", label: "Position", type: "text", placeholder: "e.g. Senior Developer" },
+  { key: "status", label: "Status", type: "text", placeholder: "e.g. Submitted, Selected, Rejected" },
+  { key: "interviewType", label: "Interview Type", type: "text", placeholder: "e.g. Phone, Video + Coding" },
+  { key: "billingRate", label: "Billing Rate", type: "text", placeholder: "e.g. $65/hr" },
+  { key: "workLocation", label: "Work Location", type: "text", placeholder: "e.g. Remote, Onsite - Dallas" },
+  { key: "submissionDate", label: "Submission Date", type: "date" },
+  { key: "submissionBy", label: "Submission By", type: "text", placeholder: "Who submitted" },
+  { key: "submissionType", label: "Submission Type", type: "text", placeholder: "e.g. Consultant, Recruiter" },
+  { key: "name", label: "Name", type: "text", placeholder: "Record name / identifier" },
+  { key: "recruiter", label: "Recruiter", type: "text", placeholder: "Recruiter name" },
+  { key: "batch", label: "Batch", type: "text", placeholder: "Batch name" },
+  { key: "cloud", label: "Cloud", type: "text", placeholder: "e.g. Salesforce, AWS" },
+  { key: "startTime", label: "Start Time", type: "date" },
+  { key: "endTime", label: "End Time", type: "date" },
+  { key: "interviewKind", label: "Interview Kind", type: "text", placeholder: "e.g. Client Round" },
+  { key: "rating", label: "Rating", type: "text", placeholder: "Rating" },
+  { key: "mentorsReview", label: "Mentor's Review", type: "text", placeholder: "Review notes" },
+  { key: "duration", label: "Duration", type: "text", placeholder: "e.g. 60 Minutes" },
+  { key: "codingRequired", label: "Coding Required?", type: "text", placeholder: "Yes / No" },
+  { key: "interviewerName", label: "Interviewer Name", type: "text", placeholder: "Interviewer(s)" },
+  { key: "vendorEmail", label: "Vendor Email", type: "text", placeholder: "vendor@example.com" },
+  { key: "vendorPhone", label: "Vendor Phone", type: "text", placeholder: "Phone number" },
+  { key: "vendorContactName", label: "Vendor Contact Name", type: "text", placeholder: "Contact person" },
+  { key: "projectDuration", label: "Project Duration", type: "text", placeholder: "e.g. 6 months" },
+  { key: "mentorsEmail", label: "Mentor's Email", type: "text", placeholder: "mentor@example.com" },
+  { key: "jobDuties", label: "Job Duties", type: "textarea", placeholder: "Describe responsibilities..." },
+  { key: "comments", label: "Comments", type: "textarea", placeholder: "Additional comments..." },
+  { key: "notes", label: "Notes", type: "textarea", placeholder: "Notes..." },
+  { key: "resume", label: "Resume", type: "text", placeholder: "Resume URL or filename" },
+  { key: "uniqueSubmissionId", label: "Unique Submission ID", type: "text", placeholder: "Unique ID" },
+  { key: "vendorScreening", label: "Vendor Screening", type: "text", placeholder: "Screening details" },
+];
 
 // ─── Column Definitions ──────────────────────────────────────────────────────
 
@@ -186,6 +243,11 @@ export default function BenchSalesPage() {
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
+  // Add record dialog
+  const [showCreate, setShowCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [formData, setFormData] = useState<Record<string, string>>({});
+
   // Filters
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     statuses: [], consultants: [], vendors: [], clients: [], submissionTypes: [],
@@ -215,11 +277,15 @@ export default function BenchSalesPage() {
   }, [search]);
 
   // Fetch filter options
-  useEffect(() => {
+  const refreshFilters = useCallback(() => {
     apiFetch<FilterOptions>("/bench-sales/filters")
       .then(setFilterOptions)
       .catch((err) => console.error("[BenchSales] Failed to fetch filters:", err));
   }, []);
+
+  useEffect(() => {
+    refreshFilters();
+  }, [refreshFilters]);
 
   // Fetch data
   const fetchData = useCallback(async () => {
@@ -269,31 +335,22 @@ export default function BenchSalesPage() {
   const toggleColumn = (key: string) => {
     setVisibleColumns((prev) => {
       const next = new Set(prev);
-      if (next.has(key)) {
-        next.delete(key);
-      } else {
-        next.add(key);
-      }
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   };
 
   const toggleSelectAll = () => {
-    if (selected.size === data.length) {
-      setSelected(new Set());
-    } else {
-      setSelected(new Set(data.map((d) => d.id)));
-    }
+    if (selected.size === data.length) setSelected(new Set());
+    else setSelected(new Set(data.map((d) => d.id)));
   };
 
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
@@ -308,6 +365,7 @@ export default function BenchSalesPage() {
       });
       setSelected(new Set());
       fetchData();
+      refreshFilters();
     } catch (err) {
       console.error("[BenchSales] Bulk delete error:", err);
     }
@@ -319,6 +377,28 @@ export default function BenchSalesPage() {
     } else {
       setSortBy(key);
       setSortOrder("asc");
+    }
+  };
+
+  // ─── Create Record ─────────────────────────────────────────────────────────
+
+  const handleCreate = async () => {
+    if (!formData.consultant?.trim()) return;
+    setCreating(true);
+    try {
+      await apiFetch("/bench-sales", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      setShowCreate(false);
+      setFormData({});
+      fetchData();
+      refreshFilters();
+    } catch (err) {
+      console.error("[BenchSales] Create error:", err);
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -364,6 +444,12 @@ export default function BenchSalesPage() {
             <p className="text-sm text-muted-foreground">{total} submissions</p>
           </div>
         </div>
+        {can("bench-sales:create") && (
+          <Button onClick={() => setShowCreate(true)} className="gap-1.5">
+            <Plus className="h-4 w-4" />
+            Add Record
+          </Button>
+        )}
       </div>
 
       {/* Toolbar: Search + Filters + Column Visibility */}
@@ -463,30 +549,10 @@ export default function BenchSalesPage() {
           {/* Filter dropdowns */}
           {showFilters && (
             <div className="mt-3 pt-3 border-t flex flex-wrap items-center gap-3">
-              <FilterSelect
-                label="Status"
-                value={statusFilter}
-                options={filterOptions.statuses}
-                onChange={setStatusFilter}
-              />
-              <FilterSelect
-                label="Consultant"
-                value={consultantFilter}
-                options={filterOptions.consultants}
-                onChange={setConsultantFilter}
-              />
-              <FilterSelect
-                label="Vendor"
-                value={vendorFilter}
-                options={filterOptions.vendors}
-                onChange={setVendorFilter}
-              />
-              <FilterSelect
-                label="Client"
-                value={clientFilter}
-                options={filterOptions.clients}
-                onChange={setClientFilter}
-              />
+              <FilterSelect label="Status" value={statusFilter} options={filterOptions.statuses} onChange={setStatusFilter} />
+              <FilterSelect label="Consultant" value={consultantFilter} options={filterOptions.consultants} onChange={setConsultantFilter} />
+              <FilterSelect label="Vendor" value={vendorFilter} options={filterOptions.vendors} onChange={setVendorFilter} />
+              <FilterSelect label="Client" value={clientFilter} options={filterOptions.clients} onChange={setClientFilter} />
               {activeFilterCount > 0 && (
                 <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 text-muted-foreground">
                   <X className="h-3.5 w-3.5" />
@@ -498,13 +564,13 @@ export default function BenchSalesPage() {
         </CardContent>
       </Card>
 
-      {/* Table */}
+      {/* Table with horizontal scroll */}
       <Card>
-        <div className="overflow-x-auto">
-          <Table>
+        <div className="overflow-x-auto scrollbar-thin">
+          <Table className="min-w-max">
             <TableHeader>
               <TableRow>
-                <TableHead className="w-10">
+                <TableHead className="w-10 sticky left-0 bg-background z-10">
                   <Checkbox
                     checked={data.length > 0 && selected.size === data.length}
                     onCheckedChange={toggleSelectAll}
@@ -513,7 +579,7 @@ export default function BenchSalesPage() {
                 {visibleColumnDefs.map((col) => (
                   <TableHead
                     key={col.key}
-                    className="whitespace-nowrap cursor-pointer hover:bg-muted/50 select-none"
+                    className="whitespace-nowrap cursor-pointer hover:bg-muted/50 select-none min-w-[120px]"
                     onClick={() => handleSort(col.key)}
                   >
                     <div className="flex items-center gap-1">
@@ -536,7 +602,7 @@ export default function BenchSalesPage() {
               {loading ? (
                 Array.from({ length: 10 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-4" /></TableCell>
+                    <TableCell className="sticky left-0 bg-background"><Skeleton className="h-4 w-4" /></TableCell>
                     {visibleColumnDefs.map((col) => (
                       <TableCell key={col.key}>
                         <Skeleton className="h-4 w-20" />
@@ -547,7 +613,7 @@ export default function BenchSalesPage() {
               ) : data.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={visibleColumnDefs.length + 1} className="h-32 text-center text-muted-foreground">
-                    No bench sales records found.
+                    No bench sales records found. Click &quot;Add Record&quot; to create one.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -556,14 +622,14 @@ export default function BenchSalesPage() {
                     key={record.id}
                     className={selected.has(record.id) ? "bg-muted/50" : ""}
                   >
-                    <TableCell>
+                    <TableCell className="sticky left-0 bg-background z-10">
                       <Checkbox
                         checked={selected.has(record.id)}
                         onCheckedChange={() => toggleSelect(record.id)}
                       />
                     </TableCell>
                     {visibleColumnDefs.map((col) => (
-                      <TableCell key={col.key} className="max-w-[200px]">
+                      <TableCell key={col.key} className="max-w-[250px]">
                         {renderCell(record, col)}
                       </TableCell>
                     ))}
@@ -597,6 +663,74 @@ export default function BenchSalesPage() {
           </div>
         )}
       </Card>
+
+      {/* ─── Add Record Dialog ──────────────────────────────────────────────── */}
+      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add Bench Sales Record</DialogTitle>
+            <DialogDescription>
+              Fill in the details below. Only Consultant is required.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            {FORM_FIELDS.map((field) => (
+              <div
+                key={field.key}
+                className={field.type === "textarea" ? "col-span-2" : ""}
+              >
+                <Label htmlFor={field.key} className="text-sm font-medium">
+                  {field.label}
+                  {field.required && <span className="text-red-500 ml-1">*</span>}
+                </Label>
+                {field.type === "textarea" ? (
+                  <Textarea
+                    id={field.key}
+                    placeholder={field.placeholder}
+                    value={formData[field.key] || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, [field.key]: e.target.value }))
+                    }
+                    className="mt-1.5"
+                    rows={3}
+                  />
+                ) : field.type === "date" ? (
+                  <Input
+                    id={field.key}
+                    type="datetime-local"
+                    value={formData[field.key] || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, [field.key]: e.target.value }))
+                    }
+                    className="mt-1.5"
+                  />
+                ) : (
+                  <Input
+                    id={field.key}
+                    placeholder={field.placeholder}
+                    value={formData[field.key] || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, [field.key]: e.target.value }))
+                    }
+                    className="mt-1.5"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreate}
+              disabled={creating || !formData.consultant?.trim()}
+            >
+              {creating ? "Adding..." : "Add Record"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
