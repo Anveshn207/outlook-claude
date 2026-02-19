@@ -248,6 +248,12 @@ export default function BenchSalesPage() {
   const [creating, setCreating] = useState(false);
   const [formData, setFormData] = useState<Record<string, string>>({});
 
+  // View/Edit record dialog
+  const [viewRecord, setViewRecord] = useState<BenchSalesRecord | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [editData, setEditData] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+
   // Filters
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     statuses: [], consultants: [], vendors: [], clients: [], submissionTypes: [],
@@ -399,6 +405,58 @@ export default function BenchSalesPage() {
       console.error("[BenchSales] Create error:", err);
     } finally {
       setCreating(false);
+    }
+  };
+
+  // ─── Open Record ──────────────────────────────────────────────────────────
+
+  const openRecord = (record: BenchSalesRecord) => {
+    setViewRecord(record);
+    setEditing(false);
+    setEditData({});
+  };
+
+  const startEditing = () => {
+    if (!viewRecord) return;
+    const data: Record<string, string> = {};
+    FORM_FIELDS.forEach((f) => {
+      const val = viewRecord[f.key as keyof BenchSalesRecord];
+      if (val) data[f.key] = String(val);
+    });
+    setEditData(data);
+    setEditing(true);
+  };
+
+  const handleSave = async () => {
+    if (!viewRecord) return;
+    setSaving(true);
+    try {
+      await apiFetch(`/bench-sales/${viewRecord.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editData),
+      });
+      setViewRecord(null);
+      setEditing(false);
+      fetchData();
+      refreshFilters();
+    } catch (err) {
+      console.error("[BenchSales] Update error:", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!viewRecord) return;
+    if (!confirm("Delete this record? This cannot be undone.")) return;
+    try {
+      await apiFetch(`/bench-sales/${viewRecord.id}`, { method: "DELETE" });
+      setViewRecord(null);
+      fetchData();
+      refreshFilters();
+    } catch (err) {
+      console.error("[BenchSales] Delete error:", err);
     }
   };
 
@@ -565,9 +623,9 @@ export default function BenchSalesPage() {
       </Card>
 
       {/* Table with horizontal scroll */}
-      <Card>
-        <div className="overflow-x-auto scrollbar-thin">
-          <Table className="min-w-max">
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-max min-w-full caption-bottom text-sm">
             <TableHeader>
               <TableRow>
                 <TableHead className="w-10 sticky left-0 bg-background z-10">
@@ -620,9 +678,10 @@ export default function BenchSalesPage() {
                 data.map((record) => (
                   <TableRow
                     key={record.id}
-                    className={selected.has(record.id) ? "bg-muted/50" : ""}
+                    className={`cursor-pointer hover:bg-muted/30 ${selected.has(record.id) ? "bg-muted/50" : ""}`}
+                    onClick={() => openRecord(record)}
                   >
-                    <TableCell className="sticky left-0 bg-background z-10">
+                    <TableCell className="sticky left-0 bg-background z-10" onClick={(e) => e.stopPropagation()}>
                       <Checkbox
                         checked={selected.has(record.id)}
                         onCheckedChange={() => toggleSelect(record.id)}
@@ -637,7 +696,7 @@ export default function BenchSalesPage() {
                 ))
               )}
             </TableBody>
-          </Table>
+          </table>
         </div>
 
         {/* Pagination */}
@@ -728,6 +787,101 @@ export default function BenchSalesPage() {
             >
               {creating ? "Adding..." : "Add Record"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ─── View/Edit Record Dialog ─────────────────────────────────────────── */}
+      <Dialog open={!!viewRecord} onOpenChange={(open) => { if (!open) { setViewRecord(null); setEditing(false); } }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editing ? "Edit Record" : "Record Details"}</DialogTitle>
+            <DialogDescription>
+              {editing ? "Update the fields below and save." : viewRecord?.consultant || "Bench sales submission details"}
+            </DialogDescription>
+          </DialogHeader>
+
+          {viewRecord && !editing && (
+            <div className="grid grid-cols-2 gap-x-6 gap-y-3 py-4">
+              {FORM_FIELDS.map((field) => {
+                const val = viewRecord[field.key as keyof BenchSalesRecord];
+                if (!val) return null;
+                const display = (field.type === "date" && val) ? formatDate(String(val)) : String(val);
+                return (
+                  <div key={field.key} className={field.type === "textarea" ? "col-span-2" : ""}>
+                    <p className="text-xs font-medium text-muted-foreground">{field.label}</p>
+                    <p className="text-sm mt-0.5">{display}</p>
+                  </div>
+                );
+              })}
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">Created</p>
+                <p className="text-sm mt-0.5">{formatDate(viewRecord.createdAt)}</p>
+              </div>
+            </div>
+          )}
+
+          {viewRecord && editing && (
+            <div className="grid grid-cols-2 gap-4 py-4">
+              {FORM_FIELDS.map((field) => (
+                <div key={field.key} className={field.type === "textarea" ? "col-span-2" : ""}>
+                  <Label htmlFor={`edit-${field.key}`} className="text-sm font-medium">
+                    {field.label}
+                    {field.required && <span className="text-red-500 ml-1">*</span>}
+                  </Label>
+                  {field.type === "textarea" ? (
+                    <Textarea
+                      id={`edit-${field.key}`}
+                      placeholder={field.placeholder}
+                      value={editData[field.key] || ""}
+                      onChange={(e) => setEditData((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                      className="mt-1.5"
+                      rows={3}
+                    />
+                  ) : field.type === "date" ? (
+                    <Input
+                      id={`edit-${field.key}`}
+                      type="datetime-local"
+                      value={editData[field.key] || ""}
+                      onChange={(e) => setEditData((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                      className="mt-1.5"
+                    />
+                  ) : (
+                    <Input
+                      id={`edit-${field.key}`}
+                      placeholder={field.placeholder}
+                      value={editData[field.key] || ""}
+                      onChange={(e) => setEditData((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                      className="mt-1.5"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <DialogFooter className="flex gap-2">
+            {!editing ? (
+              <>
+                {can("bench-sales:delete") && (
+                  <Button variant="destructive" size="sm" onClick={handleDelete} className="mr-auto gap-1.5">
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </Button>
+                )}
+                {can("bench-sales:update") && (
+                  <Button variant="outline" onClick={startEditing}>Edit</Button>
+                )}
+                <Button onClick={() => setViewRecord(null)}>Close</Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" onClick={() => setEditing(false)}>Cancel</Button>
+                <Button onClick={handleSave} disabled={saving || !editData.consultant?.trim()}>
+                  {saving ? "Saving..." : "Save Changes"}
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
