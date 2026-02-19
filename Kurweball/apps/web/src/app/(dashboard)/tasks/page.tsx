@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Plus, CheckCircle2, AlertTriangle, ShieldAlert } from "lucide-react";
+import { Plus, CheckCircle2, AlertTriangle, ShieldAlert, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -131,6 +131,16 @@ export default function TasksPage() {
     }
   };
 
+  const handleDelete = async (taskId: string) => {
+    if (!confirm("Are you sure you want to delete this task? This action cannot be undone.")) return;
+    try {
+      await apiFetch(`/tasks/${taskId}`, { method: "DELETE" });
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      console.error("[TasksPage] Delete failed:", err);
+    }
+  };
+
   if (!can("tasks:read")) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -208,21 +218,37 @@ export default function TasksPage() {
     {
       key: "actions",
       header: "",
-      render: (t) =>
-        t.status !== "COMPLETED" && t.status !== "CANCELLED" ? (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 text-xs text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleComplete(t.id);
-            }}
-          >
-            <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
-            Done
-          </Button>
-        ) : null,
+      render: (t) => (
+        <div className="flex items-center gap-1">
+          {t.status !== "COMPLETED" && t.status !== "CANCELLED" && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-xs text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleComplete(t.id);
+              }}
+            >
+              <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
+              Done
+            </Button>
+          )}
+          {can("tasks:delete") && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(t.id);
+              }}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          )}
+        </div>
+      ),
     },
   ];
 

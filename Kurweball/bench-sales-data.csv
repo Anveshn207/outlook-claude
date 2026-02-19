@@ -1,0 +1,26 @@
+Applicant ID,Applicant Full Name,Email Address,Mobile Number,Technology,Job Title,Work Authorization,City,State,LinkedIn Profile URL,Availability,Rate,Experience (Years),Relocation,Resume Available,Source,Applicant Status
+BS-1001,Rajesh Kumar,rajesh.kumar@gmail.com,+1-469-555-0112,Java/Microservices/AWS,Senior Java Developer,H1B,Dallas,TX,https://linkedin.com/in/rajeshkumar01,Immediate,$85/hr,9,Yes,Yes,LINKEDIN,ACTIVE
+BS-1002,Priya Sharma,priya.sharma@outlook.com,+1-408-555-0234,React/Node.js/TypeScript,Full Stack Developer,H1B Transfer,San Jose,CA,https://linkedin.com/in/priyasharma02,Immediate,$80/hr,6,No,Yes,REFERRAL,ACTIVE
+BS-1003,Venkat Reddy,venkat.reddy@yahoo.com,+1-732-555-0345,.NET/Azure/C#,Senior .NET Developer,GC,Edison,NJ,https://linkedin.com/in/venkatreddy03,Immediate,$90/hr,11,Yes,Yes,DIRECT,ACTIVE
+BS-1004,Sravani Patel,sravani.patel@gmail.com,+1-312-555-0456,Salesforce Admin/Developer,Salesforce Developer,OPT EAD,Chicago,IL,https://linkedin.com/in/sravanipatel04,2 Weeks,$70/hr,4,Yes,Yes,JOBBOARD,ACTIVE
+BS-1005,Arun Nair,arun.nair@gmail.com,+1-206-555-0567,Python/Django/AWS,Python Developer,H1B,Seattle,WA,https://linkedin.com/in/arunnair05,Immediate,$82/hr,7,No,Yes,LINKEDIN,ACTIVE
+BS-1006,Deepika Joshi,deepika.joshi@hotmail.com,+1-571-555-0678,Data Engineering/Spark/Scala,Data Engineer,GC EAD,Ashburn,VA,https://linkedin.com/in/deepikajoshi06,Immediate,$95/hr,8,Yes,Yes,REFERRAL,ACTIVE
+BS-1007,Suresh Babu,suresh.babu@gmail.com,+1-678-555-0789,SAP FICO/S4HANA,SAP FICO Consultant,USC,Atlanta,GA,https://linkedin.com/in/sureshbabu07,Immediate,$105/hr,14,Yes,Yes,DIRECT,ACTIVE
+BS-1008,Meghana Rao,meghana.rao@gmail.com,+1-469-555-0890,DevOps/Kubernetes/Terraform,DevOps Engineer,H1B,Plano,TX,https://linkedin.com/in/meghanarao08,Immediate,$88/hr,6,Yes,Yes,LINKEDIN,ACTIVE
+BS-1009,Karthik Sundaram,karthik.s@outlook.com,+1-925-555-0901,ServiceNow/ITSM,ServiceNow Developer,OPT STEM,Pleasanton,CA,https://linkedin.com/in/karthiksundaram09,Immediate,$72/hr,3,Yes,Yes,JOBBOARD,ACTIVE
+BS-1010,Anitha Krishnan,anitha.k@gmail.com,+1-862-555-1012,QA Automation/Selenium/Java,Senior QA Engineer,H4 EAD,Jersey City,NJ,https://linkedin.com/in/anithakrishnan10,2 Weeks,$68/hr,5,No,Yes,REFERRAL,ACTIVE
+BS-1011,Ravi Teja,ravi.teja@gmail.com,+1-214-555-1123,Angular/React/AWS,Frontend Developer,H1B,Irving,TX,https://linkedin.com/in/raviteja11,Immediate,$75/hr,5,Yes,Yes,LINKEDIN,ACTIVE
+BS-1012,Swathi Mohan,swathi.mohan@yahoo.com,+1-703-555-1234,Business Analyst/Agile,Senior Business Analyst,GC,Reston,VA,https://linkedin.com/in/swathimohan12,Immediate,$85/hr,9,No,Yes,DIRECT,ACTIVE
+BS-1013,Manoj Gupta,manoj.gupta@gmail.com,+1-847-555-1345,Pega/BPM,Pega Developer,H1B Transfer,Schaumburg,IL,https://linkedin.com/in/manojgupta13,Immediate,$92/hr,8,Yes,Yes,REFERRAL,ACTIVE
+BS-1014,Lakshmi Prasad,lakshmi.p@gmail.com,+1-510-555-1456,Tableau/Power BI/SQL,Data Analyst,OPT EAD,Fremont,CA,https://linkedin.com/in/lakshmiprasad14,Immediate,$65/hr,3,Yes,Yes,JOBBOARD,ACTIVE
+BS-1015,Naveen Chandra,naveen.c@outlook.com,+1-972-555-1567,Hadoop/Snowflake/ETL,Big Data Developer,USC,Richardson,TX,https://linkedin.com/in/naveenchandra15,Immediate,$98/hr,10,Yes,Yes,LINKEDIN,ACTIVE
+BS-1016,Divya Menon,divya.menon@gmail.com,+1-404-555-1678,iOS/Swift/React Native,Mobile Developer,H1B,Alpharetta,GA,https://linkedin.com/in/divyamenon16,2 Weeks,$80/hr,5,No,Yes,DIRECT,ACTIVE
+BS-1017,Prashanth Hegde,prashanth.h@gmail.com,+1-201-555-1789,Workday HCM/Integration,Workday Consultant,GC EAD,Hoboken,NJ,https://linkedin.com/in/prashanthhegde17,Immediate,$110/hr,12,Yes,Yes,REFERRAL,ACTIVE
+BS-1018,Kavitha Raman,kavitha.r@yahoo.com,+1-425-555-1890,Scrum Master/SAFe,Scrum Master,H4 EAD,Bellevue,WA,https://linkedin.com/in/kavitharaman18,Immediate,$75/hr,6,No,Yes,LINKEDIN,ACTIVE
+BS-1019,Srinivas Yadav,srinivas.y@gmail.com,+1-469-555-1901,Mulesoft/API Integration,Mulesoft Developer,H1B,Frisco,TX,https://linkedin.com/in/srinivasyadav19,Immediate,$88/hr,7,Yes,Yes,JOBBOARD,ACTIVE
+BS-1020,Pooja Deshmukh,pooja.d@gmail.com,+1-571-555-2012,Cybersecurity/SIEM/Splunk,Security Analyst,OPT STEM,Sterling,VA,https://linkedin.com/in/poojadeshmukh20,Immediate,$78/hr,4,Yes,Yes,DIRECT,ACTIVE
+BS-1021,Harish Kumar,harish.k@outlook.com,+1-732-555-2123,AWS/Solution Architecture,AWS Solutions Architect,USC,Princeton,NJ,https://linkedin.com/in/harishkumar21,2 Weeks,$120/hr,13,Yes,Yes,LINKEDIN,ACTIVE
+BS-1022,Bhavya Shetty,bhavya.s@gmail.com,+1-312-555-2234,UI/UX/Figma/CSS,UI/UX Designer,H1B,Naperville,IL,https://linkedin.com/in/bhavyashetty22,Immediate,$70/hr,4,No,Yes,REFERRAL,ACTIVE
+BS-1023,Vikram Singh,vikram.singh@gmail.com,+1-408-555-2345,Informatica/Data Warehouse,ETL Developer,GC,Sunnyvale,CA,https://linkedin.com/in/vikramsingh23,Immediate,$90/hr,10,Yes,Yes,DIRECT,ACTIVE
+BS-1024,Aarti Kulkarni,aarti.k@yahoo.com,+1-678-555-2456,RPA/UiPath/Blue Prism,RPA Developer,H1B Transfer,Marietta,GA,https://linkedin.com/in/aartikulkarni24,Immediate,$72/hr,4,Yes,Yes,JOBBOARD,ACTIVE
+BS-1025,Ganesh Iyer,ganesh.iyer@gmail.com,+1-214-555-2567,Oracle DBA/Cloud,Oracle DBA,USC,Dallas,TX,https://linkedin.com/in/ganeshiyer25,Immediate,$100/hr,15,No,Yes,LINKEDIN,ACTIVE

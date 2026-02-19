@@ -24,12 +24,15 @@ export interface ImportResult {
 export interface FieldDefinition {
   key: string;
   label: string;
-  type: 'string' | 'number' | 'enum' | 'array';
+  type: 'string' | 'number' | 'enum' | 'array' | 'date';
   required?: boolean;
   enumValues?: string[];
+  virtual?: boolean; // Not a real DB column — transformed during import
 }
 
 export const CANDIDATE_FIELDS: FieldDefinition[] = [
+  { key: 'applicantId', label: 'Applicant ID', type: 'string' },
+  { key: 'fullName', label: 'Full Name', type: 'string', virtual: true },
   { key: 'firstName', label: 'First Name', type: 'string', required: true },
   { key: 'lastName', label: 'Last Name', type: 'string', required: true },
   { key: 'email', label: 'Email', type: 'string' },
@@ -37,10 +40,13 @@ export const CANDIDATE_FIELDS: FieldDefinition[] = [
   { key: 'title', label: 'Job Title', type: 'string' },
   { key: 'currentEmployer', label: 'Current Employer', type: 'string' },
   { key: 'location', label: 'Location', type: 'string' },
+  { key: 'state', label: 'State', type: 'string' },
   { key: 'visaStatus', label: 'Visa Status', type: 'string' },
   { key: 'linkedinUrl', label: 'LinkedIn URL', type: 'string' },
   { key: 'rate', label: 'Rate', type: 'number' },
   { key: 'availability', label: 'Availability', type: 'string' },
+  { key: 'dateOfBirth', label: 'Date of Birth', type: 'date' },
+  { key: 'resumeAvailable', label: 'Resume Available', type: 'string' },
   { key: 'skills', label: 'Skills', type: 'array' },
   { key: 'tags', label: 'Tags', type: 'array' },
   {

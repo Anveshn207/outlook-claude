@@ -24,6 +24,7 @@ import {
   CheckCircle,
   AlertCircle,
   FileSpreadsheet,
+  Sparkles,
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { ColumnMappingTable } from "./column-mapping-table";
@@ -71,6 +72,8 @@ const ENTITY_FIELDS: Record<
   { key: string; label: string }[]
 > = {
   candidate: [
+    { key: "applicantId", label: "Applicant ID" },
+    { key: "fullName", label: "Full Name" },
     { key: "firstName", label: "First Name" },
     { key: "lastName", label: "Last Name" },
     { key: "email", label: "Email" },
@@ -78,10 +81,13 @@ const ENTITY_FIELDS: Record<
     { key: "title", label: "Job Title" },
     { key: "currentEmployer", label: "Current Employer" },
     { key: "location", label: "Location" },
+    { key: "state", label: "State" },
     { key: "visaStatus", label: "Visa Status" },
     { key: "linkedinUrl", label: "LinkedIn URL" },
     { key: "rate", label: "Rate" },
     { key: "availability", label: "Availability" },
+    { key: "dateOfBirth", label: "Date of Birth" },
+    { key: "resumeAvailable", label: "Resume Available" },
     { key: "skills", label: "Skills" },
     { key: "tags", label: "Tags" },
     { key: "source", label: "Source" },
@@ -155,6 +161,9 @@ export function ImportDialog({
   // Step 4
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
 
+  // Auto-mapping indicator
+  const [autoMapped, setAutoMapped] = useState(false);
+
   const entityFields = ENTITY_FIELDS[entityType];
   const entityLabel = ENTITY_LABELS[entityType];
 
@@ -171,6 +180,7 @@ export function ImportDialog({
         setParsedFile(null);
         setMappings([]);
         setImportResult(null);
+        setAutoMapped(false);
       }
       onOpenChange(isOpen);
     },
@@ -233,9 +243,10 @@ export function ImportDialog({
   const analyzeColumns = async (fileResult: ParsedFileResult) => {
     setLoading(true);
     setError(null);
+    setAutoMapped(false);
 
     try {
-      const suggestions = await apiFetch<MappingSuggestion[]>(
+      const raw = await apiFetch<MappingSuggestion[]>(
         "/import/analyze",
         {
           method: "POST",
@@ -246,10 +257,25 @@ export function ImportDialog({
           }),
         },
       );
+
+      // Normalize: convert SKIP to empty so activeMappings filter works
+      const suggestions = raw.map((s) => ({
+        ...s,
+        targetField: s.targetField === "SKIP" ? "" : s.targetField,
+        confidence: s.targetField === "SKIP" ? 0 : s.confidence,
+      }));
+
       setMappings(suggestions);
+
+      // Auto-advance: if we have good mappings, skip to preview
+      const mapped = suggestions.filter((s) => s.targetField);
+      const highConfidence = mapped.filter((s) => s.confidence >= 0.7);
+      if (mapped.length >= 2 && highConfidence.length === mapped.length) {
+        setAutoMapped(true);
+        setStep(3);
+      }
     } catch (err) {
       console.error("[ImportDialog] Analysis failed:", err);
-      // Fall back to empty mappings so the user can map manually
       setMappings(
         fileResult.columns.map((col) => ({
           sourceColumn: col,
@@ -324,7 +350,9 @@ export function ImportDialog({
   const stepDescriptions: Record<number, string> = {
     1: "Upload a CSV or Excel file to get started.",
     2: "Match your file columns to the correct fields.",
-    3: "Review the data before importing.",
+    3: autoMapped
+      ? "Columns were auto-detected. Review and import."
+      : "Review the data before importing.",
     4: "Your import has completed.",
   };
 
@@ -458,6 +486,21 @@ export function ImportDialog({
         {/* Step 3 — Preview */}
         {step === 3 && (
           <div className="space-y-4">
+            {autoMapped && (
+              <div className="flex items-center gap-2 rounded-md border border-primary/30 bg-primary/5 p-3 text-sm text-primary">
+                <Sparkles className="h-4 w-4 shrink-0" />
+                <span>
+                  Columns were auto-mapped based on your file headers.{" "}
+                  <button
+                    type="button"
+                    className="underline font-medium hover:opacity-80"
+                    onClick={() => setStep(2)}
+                  >
+                    Review mappings
+                  </button>
+                </span>
+              </div>
+            )}
             <div className="text-sm text-muted-foreground">
               Showing first {previewRows.length} of{" "}
               <span className="font-medium text-foreground">

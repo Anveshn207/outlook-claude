@@ -297,8 +297,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           body: {
             success: false,
             error: {
-              code: 'VALIDATION_ERROR',
-              message: 'Referenced record does not exist',
+              code: 'FOREIGN_KEY_CONSTRAINT',
+              message: 'Cannot delete this record because it has related data. Remove dependent records first.',
             },
           },
         };

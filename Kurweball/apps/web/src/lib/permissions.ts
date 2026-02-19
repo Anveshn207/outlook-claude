@@ -45,7 +45,7 @@ const RECRUITER_PERMISSIONS: Permission[] = [
   'pipeline:update',
   'submissions:create', 'submissions:update', 'submissions:delete',
   'interviews:create', 'interviews:update', 'interviews:delete',
-  'tasks:create', 'tasks:update', 'tasks:delete',
+  'tasks:create', 'tasks:update',
   'activities:create',
   'saved-views:create', 'saved-views:update', 'saved-views:delete',
   'import-export:create',

@@ -200,6 +200,7 @@ model User {
 model Candidate {
   id              String          @id @default(cuid())
   tenantId        String
+  applicantId     String?
   firstName       String
   lastName        String
   email           String?
@@ -209,11 +210,14 @@ model Candidate {
   title           String?
   currentEmployer String?
   location        String?
+  state           String?
   visaStatus      String?
   linkedinUrl     String?
   rate            Decimal?
   rateType        RateType?
   availability    String?
+  dateOfBirth     DateTime?
+  resumeAvailable String?
   skills          String[]
   tags            String[]
   customData      Json            @default("{}")

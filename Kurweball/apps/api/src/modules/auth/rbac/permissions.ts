@@ -107,7 +107,8 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
       p !== 'users:create' &&
       p !== 'users:update' &&
       p !== 'settings:update' &&
-      p !== 'search:reindex',
+      p !== 'search:reindex' &&
+      p !== 'tasks:delete',
   ),
 
   RECRUITER: [
@@ -137,7 +138,6 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     'tasks:read',
     'tasks:create',
     'tasks:update',
-    'tasks:delete',
     'custom-fields:read',
     'settings:read',
     'users:read',

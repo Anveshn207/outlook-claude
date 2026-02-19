@@ -35,7 +35,14 @@
       "Bash(\"C:\\\\Program Files \\(x86\\)\\\\cloudflared\\\\cloudflared.exe\" tunnel --url http://localhost:3000)",
       "Bash(cmd /c \"taskkill /PID 51700 /F\")",
       "Bash(cmd /c \"for /f \"\"tokens=5\"\" %a in \\(''netstat -ano ^| findstr :3001 ^| findstr LISTENING''\\) do taskkill /PID %a /F\")",
-      "Bash(del \"C:\\\\Outlook Claude\\\\Kurweball\\\\test-registration.mjs\")"
+      "Bash(del \"C:\\\\Outlook Claude\\\\Kurweball\\\\test-registration.mjs\")",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbWxsYWxpY2MwMDAyNjFld29hZW90NjlyIiwiZW1haWwiOiJhbnZlc2gubkBlbmdpbmVlcmluZ3NxdWFyZS51cyIsInRlbmFudElkIjoiY21sbGFsaTU0MDAwMDYxZXc5amxsamthZiIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc3MTAxMjg1NywiZXhwIjoxNzcxMDEzNzU3fQ.eADJ9pSqQy-oZnGgHpWPz2kMne9GczsI1kVUZvlD_80\")",
+      "Bash(ipconfig:*)",
+      "Bash(netsh advfirewall firewall show rule:*)",
+      "Bash(cmd.exe /c start outlook)",
+      "Bash(cmd.exe /c start \"\" \"outlook:\")",
+      "Bash(cmd.exe /c start \"\" \"shell:AppsFolder\\\\Microsoft.OutlookForWindows_8wekyb3d8bbwe!Microsoft.OutlookforWindows\")",
+      "Bash(cmd.exe /c start msedge \"https://outlook.office.com/mail/\")"
     ]
   }
 }

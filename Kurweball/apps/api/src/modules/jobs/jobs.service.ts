@@ -222,7 +222,12 @@ export class JobsService {
       throw new NotFoundException(`Job with id "${id}" not found`);
     }
 
-    await this.prisma.job.delete({ where: { id } });
+    await this.prisma.$transaction([
+      this.prisma.interview.deleteMany({ where: { jobId: id } }),
+      this.prisma.submission.deleteMany({ where: { jobId: id } }),
+      this.prisma.activity.deleteMany({ where: { entityType: 'JOB', entityId: id } }),
+      this.prisma.job.delete({ where: { id } }),
+    ]);
 
     return { deleted: true };
   }
@@ -237,8 +242,11 @@ export class JobsService {
   }
 
   async bulkDelete(tenantId: string, ids: string[]) {
-    const result = await this.prisma.job.deleteMany({
-      where: { id: { in: ids }, tenantId },
+    const result = await this.prisma.$transaction(async (tx) => {
+      await tx.interview.deleteMany({ where: { jobId: { in: ids } } });
+      await tx.submission.deleteMany({ where: { jobId: { in: ids } } });
+      await tx.activity.deleteMany({ where: { entityType: 'JOB', entityId: { in: ids } } });
+      return tx.job.deleteMany({ where: { id: { in: ids }, tenantId } });
     });
     console.log(`[JobsService] bulkDelete count=${result.count}`);
     return { deleted: result.count };

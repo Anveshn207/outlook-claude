@@ -196,6 +196,20 @@ export class ImportService {
 
       const targetField = mapping.targetField;
 
+      // Special handling: fullName → split into firstName + lastName
+      if (targetField === 'fullName') {
+        const trimmed = rawValue.trim();
+        const spaceIdx = trimmed.indexOf(' ');
+        if (spaceIdx > 0) {
+          data.firstName = data.firstName || trimmed.slice(0, spaceIdx);
+          data.lastName = data.lastName || trimmed.slice(spaceIdx + 1).trim();
+        } else {
+          data.firstName = data.firstName || trimmed;
+          data.lastName = data.lastName || trimmed;
+        }
+        continue;
+      }
+
       // Special handling: jobs with clientName need client lookup
       if (entityType === 'job' && targetField === 'clientName') {
         clientName = rawValue.trim();
@@ -265,6 +279,11 @@ export class ImportService {
       case 'number': {
         const parsed = parseFloat(rawValue);
         return isNaN(parsed) ? undefined : parsed;
+      }
+
+      case 'date': {
+        const parsed = new Date(rawValue);
+        return isNaN(parsed.getTime()) ? undefined : parsed;
       }
 
       case 'enum':

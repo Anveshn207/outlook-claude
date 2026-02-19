@@ -156,9 +156,15 @@ export class CandidatesService {
       throw new NotFoundException(`Candidate with ID "${id}" not found`);
     }
 
-    return this.prisma.candidate.delete({
-      where: { id },
-    });
+    await this.prisma.$transaction([
+      this.prisma.interview.deleteMany({ where: { candidateId: id } }),
+      this.prisma.submission.deleteMany({ where: { candidateId: id } }),
+      this.prisma.resume.deleteMany({ where: { candidateId: id } }),
+      this.prisma.activity.deleteMany({ where: { entityType: 'CANDIDATE', entityId: id } }),
+      this.prisma.candidate.delete({ where: { id } }),
+    ]);
+
+    return { deleted: true };
   }
 
   async bulkUpdateStatus(tenantId: string, ids: string[], status: CandidateStatus) {
@@ -171,8 +177,12 @@ export class CandidatesService {
   }
 
   async bulkDelete(tenantId: string, ids: string[]) {
-    const result = await this.prisma.candidate.deleteMany({
-      where: { id: { in: ids }, tenantId },
+    const result = await this.prisma.$transaction(async (tx) => {
+      await tx.interview.deleteMany({ where: { candidateId: { in: ids } } });
+      await tx.submission.deleteMany({ where: { candidateId: { in: ids } } });
+      await tx.resume.deleteMany({ where: { candidateId: { in: ids } } });
+      await tx.activity.deleteMany({ where: { entityType: 'CANDIDATE', entityId: { in: ids } } });
+      return tx.candidate.deleteMany({ where: { id: { in: ids }, tenantId } });
     });
     console.log(`[CandidatesService] bulkDelete count=${result.count}`);
     return { deleted: result.count };

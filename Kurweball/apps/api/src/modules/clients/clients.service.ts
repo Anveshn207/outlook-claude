@@ -138,7 +138,21 @@ export class ClientsService {
   async remove(tenantId: string, id: string) {
     await this.verifyClientExists(tenantId, id);
 
-    return this.prisma.client.delete({ where: { id } });
+    await this.prisma.$transaction(async (tx) => {
+      // Get all jobs for this client to clean up their dependents
+      const jobIds = (await tx.job.findMany({ where: { clientId: id }, select: { id: true } })).map(j => j.id);
+      if (jobIds.length > 0) {
+        await tx.interview.deleteMany({ where: { jobId: { in: jobIds } } });
+        await tx.submission.deleteMany({ where: { jobId: { in: jobIds } } });
+        await tx.activity.deleteMany({ where: { entityType: 'JOB', entityId: { in: jobIds } } });
+        await tx.job.deleteMany({ where: { clientId: id } });
+      }
+      await tx.contact.deleteMany({ where: { clientId: id } });
+      await tx.activity.deleteMany({ where: { entityType: 'CLIENT', entityId: id } });
+      await tx.client.delete({ where: { id } });
+    });
+
+    return { deleted: true };
   }
 
   // ─── Contact Methods ──────────────────────────────────────────────────────
@@ -229,8 +243,18 @@ export class ClientsService {
   }
 
   async bulkDelete(tenantId: string, ids: string[]) {
-    const result = await this.prisma.client.deleteMany({
-      where: { id: { in: ids }, tenantId },
+    const result = await this.prisma.$transaction(async (tx) => {
+      // Get all jobs for these clients to clean up their dependents
+      const jobIds = (await tx.job.findMany({ where: { clientId: { in: ids } }, select: { id: true } })).map(j => j.id);
+      if (jobIds.length > 0) {
+        await tx.interview.deleteMany({ where: { jobId: { in: jobIds } } });
+        await tx.submission.deleteMany({ where: { jobId: { in: jobIds } } });
+        await tx.activity.deleteMany({ where: { entityType: 'JOB', entityId: { in: jobIds } } });
+        await tx.job.deleteMany({ where: { clientId: { in: ids } } });
+      }
+      await tx.contact.deleteMany({ where: { clientId: { in: ids } } });
+      await tx.activity.deleteMany({ where: { entityType: 'CLIENT', entityId: { in: ids } } });
+      return tx.client.deleteMany({ where: { id: { in: ids }, tenantId } });
     });
     console.log(`[ClientsService] bulkDelete count=${result.count}`);
     return { deleted: result.count };
