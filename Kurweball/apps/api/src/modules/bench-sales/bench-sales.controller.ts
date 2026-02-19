@@ -8,9 +8,13 @@ import {
   Param,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
   HttpCode,
   HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { BenchSalesService } from './bench-sales.service';
 import { CreateBenchSalesDto } from './dto/create-bench-sales.dto';
 import { UpdateBenchSalesDto } from './dto/update-bench-sales.dto';
@@ -68,6 +72,18 @@ export class BenchSalesController {
     @Body() body: { ids: string[] },
   ) {
     return this.benchSalesService.bulkDelete(user.tenantId, body.ids);
+  }
+
+  @Post('upload-resume')
+  @RequirePermissions('bench-sales:create')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadResume(@UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('No file provided');
+    return {
+      url: `/uploads/bench-sales/${file.filename}`,
+      fileName: file.originalname,
+      fileSize: file.size,
+    };
   }
 
   @Get(':id')

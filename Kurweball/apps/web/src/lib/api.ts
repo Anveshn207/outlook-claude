@@ -49,8 +49,10 @@ export async function apiFetch<T = unknown>(
   const { skipAuth: _skipAuth = false, _isRetry = false, headers: customHeaders, ...rest } = options;
   const method = (rest.method || "GET").toUpperCase();
 
+  const isFormData = typeof FormData !== 'undefined' && rest.body instanceof FormData;
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
+    // Don't set Content-Type for FormData — browser sets it with boundary
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...((customHeaders as Record<string, string>) || {}),
   };
 

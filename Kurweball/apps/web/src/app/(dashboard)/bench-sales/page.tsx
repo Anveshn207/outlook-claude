@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   TrendingUp,
   Filter,
@@ -16,6 +16,10 @@ import {
   ArrowUp,
   ArrowDown,
   Trash2,
+  Paperclip,
+  FileText,
+  Download,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -111,7 +115,7 @@ interface ColumnDef {
 interface FormFieldDef {
   key: string;
   label: string;
-  type: "text" | "textarea" | "date";
+  type: "text" | "textarea" | "date" | "file";
   required?: boolean;
   placeholder?: string;
 }
@@ -143,7 +147,7 @@ const FORM_FIELDS: FormFieldDef[] = [
   { key: "projectDuration", label: "Project Duration", type: "text", placeholder: "e.g. 6 months" },
   { key: "jobDuties", label: "Job Duties", type: "textarea", placeholder: "Describe responsibilities..." },
   { key: "comments", label: "Comments", type: "textarea", placeholder: "Additional comments..." },
-  { key: "resume", label: "Resume", type: "text", placeholder: "Resume URL or filename" },
+  { key: "resume", label: "Resume", type: "file" },
   { key: "uniqueSubmissionId", label: "Unique Submission ID", type: "text", placeholder: "Unique ID" },
   { key: "vendorScreening", label: "Vendor Screening", type: "text", placeholder: "Screening details" },
 ];
@@ -239,6 +243,11 @@ export default function BenchSalesPage() {
   const [editData, setEditData] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
+  // Resume file upload
+  const [uploading, setUploading] = useState(false);
+  const createFileRef = useRef<HTMLInputElement>(null);
+  const editFileRef = useRef<HTMLInputElement>(null);
+
   // Filters
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
     statuses: [], consultants: [], vendors: [], clients: [], submissionTypes: [],
@@ -257,6 +266,12 @@ export default function BenchSalesPage() {
     });
     return defaults;
   });
+
+  // Column ordering (excluding consultant which is always first/sticky)
+  const [columnOrder, setColumnOrder] = useState<string[]>(() =>
+    ALL_COLUMNS.filter(c => c.key !== 'consultant').map(c => c.key)
+  );
+  const [draggedCol, setDraggedCol] = useState<string | null>(null);
 
   // Selection
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -371,6 +386,50 @@ export default function BenchSalesPage() {
     }
   };
 
+  // ─── Column Drag & Drop ────────────────────────────────────────────────────
+  const handleDragStart = (e: React.DragEvent, key: string) => {
+    setDraggedCol(key);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+  const handleDragEnd = () => setDraggedCol(null);
+  const handleColumnDrop = (targetKey: string) => {
+    if (!draggedCol || draggedCol === targetKey) return;
+    setColumnOrder(prev => {
+      const next = [...prev];
+      const fromIdx = next.indexOf(draggedCol);
+      const toIdx = next.indexOf(targetKey);
+      next.splice(fromIdx, 1);
+      next.splice(toIdx, 0, draggedCol);
+      return next;
+    });
+    setDraggedCol(null);
+  };
+
+  // ─── Resume Upload ─────────────────────────────────────────────────────────
+
+  const handleFileUpload = async (file: File, target: "create" | "edit") => {
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const result = await apiFetch<{ url: string; fileName: string }>("/bench-sales/upload-resume", {
+        method: "POST",
+        body: fd,
+      });
+      // Store as "fileName|url" so we can display the name and link
+      const resumeValue = `${result.fileName}|${result.url}`;
+      if (target === "create") {
+        setFormData((prev) => ({ ...prev, resume: resumeValue }));
+      } else {
+        setEditData((prev) => ({ ...prev, resume: resumeValue }));
+      }
+    } catch (err) {
+      console.error("[BenchSales] Resume upload error:", err);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   // ─── Create Record ─────────────────────────────────────────────────────────
 
   const handleCreate = async () => {
@@ -446,8 +505,11 @@ export default function BenchSalesPage() {
   };
 
   const visibleColumnDefs = useMemo(
-    () => ALL_COLUMNS.filter((c) => visibleColumns.has(c.key)),
-    [visibleColumns],
+    () => columnOrder
+      .filter(key => visibleColumns.has(key))
+      .map(key => ALL_COLUMNS.find(c => c.key === key)!)
+      .filter(Boolean),
+    [columnOrder, visibleColumns],
   );
 
   const renderCell = (record: BenchSalesRecord, col: ColumnDef) => {
@@ -463,7 +525,19 @@ export default function BenchSalesPage() {
       return <span className="text-xs whitespace-nowrap">{formatDate(val as string)}</span>;
     }
     if (col.key === "resume" && val) {
-      const match = (val as string).match(/\((https?:\/\/[^)]+)\)/);
+      const str = val as string;
+      // Format: "fileName|/uploads/bench-sales/xxx"
+      if (str.includes("|/uploads/")) {
+        const [fileName] = str.split("|");
+        return (
+          <span className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
+            <FileText className="h-3.5 w-3.5" />
+            {truncate(fileName, 20)}
+          </span>
+        );
+      }
+      // Legacy: markdown link format
+      const match = str.match(/\((https?:\/\/[^)]+)\)/);
       if (match) {
         return (
           <a href={match[1]} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
@@ -471,7 +545,7 @@ export default function BenchSalesPage() {
           </a>
         );
       }
-      return <span className="text-xs">{truncate(val as string, 20)}</span>;
+      return <span className="text-xs">{truncate(str, 20)}</span>;
     }
     return <span className="text-xs">{truncate(val as string)}</span>;
   };
@@ -563,8 +637,9 @@ export default function BenchSalesPage() {
                     </Button>
                   </div>
                 </div>
+                <p className="text-[10px] text-muted-foreground mb-2">Consultant is always visible. Drag column headers to reorder.</p>
                 <div className="space-y-1">
-                  {ALL_COLUMNS.map((col) => (
+                  {ALL_COLUMNS.filter(c => c.key !== 'consultant').map((col) => (
                     <label
                       key={col.key}
                       className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50 cursor-pointer"
@@ -613,16 +688,37 @@ export default function BenchSalesPage() {
           <table className="w-max min-w-full caption-bottom text-sm">
             <TableHeader>
               <TableRow>
-                <TableHead className="w-10 sticky left-0 bg-background z-10">
+                {/* Sticky checkbox */}
+                <TableHead className="w-10 sticky left-0 bg-card z-20">
                   <Checkbox
                     checked={data.length > 0 && selected.size === data.length}
                     onCheckedChange={toggleSelectAll}
                   />
                 </TableHead>
+                {/* Sticky consultant column */}
+                <TableHead
+                  className="sticky left-10 bg-card z-20 whitespace-nowrap cursor-pointer hover:bg-muted select-none min-w-[150px] border-r border-border"
+                  onClick={() => handleSort('consultant')}
+                >
+                  <div className="flex items-center gap-1">
+                    Consultant
+                    {sortBy === 'consultant' ? (
+                      sortOrder === 'asc' ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />
+                    ) : (
+                      <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/40" />
+                    )}
+                  </div>
+                </TableHead>
+                {/* Scrollable, draggable columns */}
                 {visibleColumnDefs.map((col) => (
                   <TableHead
                     key={col.key}
-                    className="whitespace-nowrap cursor-pointer hover:bg-muted/50 select-none min-w-[120px]"
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, col.key)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={() => handleColumnDrop(col.key)}
+                    className={`whitespace-nowrap cursor-grab hover:bg-muted/50 select-none min-w-[120px] ${draggedCol === col.key ? 'opacity-40' : ''}`}
                     onClick={() => handleSort(col.key)}
                   >
                     <div className="flex items-center gap-1">
@@ -645,7 +741,8 @@ export default function BenchSalesPage() {
               {loading ? (
                 Array.from({ length: 10 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell className="sticky left-0 bg-background"><Skeleton className="h-4 w-4" /></TableCell>
+                    <TableCell className="sticky left-0 bg-card z-10"><Skeleton className="h-4 w-4" /></TableCell>
+                    <TableCell className="sticky left-10 bg-card z-10 border-r border-border"><Skeleton className="h-4 w-24" /></TableCell>
                     {visibleColumnDefs.map((col) => (
                       <TableCell key={col.key}>
                         <Skeleton className="h-4 w-20" />
@@ -655,7 +752,7 @@ export default function BenchSalesPage() {
                 ))
               ) : data.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={visibleColumnDefs.length + 1} className="h-32 text-center text-muted-foreground">
+                  <TableCell colSpan={visibleColumnDefs.length + 2} className="h-32 text-center text-muted-foreground">
                     No bench sales records found. Click &quot;Add Record&quot; to create one.
                   </TableCell>
                 </TableRow>
@@ -663,15 +760,24 @@ export default function BenchSalesPage() {
                 data.map((record) => (
                   <TableRow
                     key={record.id}
-                    className={`cursor-pointer hover:bg-muted/30 ${selected.has(record.id) ? "bg-muted/50" : ""}`}
+                    className={`group cursor-pointer hover:bg-muted/30 ${selected.has(record.id) ? "bg-muted/50" : ""}`}
                     onClick={() => openRecord(record)}
                   >
-                    <TableCell className="sticky left-0 bg-background z-10" onClick={(e) => e.stopPropagation()}>
+                    {/* Sticky checkbox */}
+                    <TableCell
+                      className={`sticky left-0 z-10 group-hover:bg-muted ${selected.has(record.id) ? "bg-muted" : "bg-card"}`}
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <Checkbox
                         checked={selected.has(record.id)}
                         onCheckedChange={() => toggleSelect(record.id)}
                       />
                     </TableCell>
+                    {/* Sticky consultant */}
+                    <TableCell className={`sticky left-10 z-10 border-r border-border group-hover:bg-muted ${selected.has(record.id) ? "bg-muted" : "bg-card"}`}>
+                      <span className="text-xs font-medium">{truncate(record.consultant, 40)}</span>
+                    </TableCell>
+                    {/* Scrollable columns */}
                     {visibleColumnDefs.map((col) => (
                       <TableCell key={col.key} className="max-w-[250px]">
                         {renderCell(record, col)}
@@ -721,13 +827,55 @@ export default function BenchSalesPage() {
             {FORM_FIELDS.map((field) => (
               <div
                 key={field.key}
-                className={field.type === "textarea" ? "col-span-2" : ""}
+                className={field.type === "textarea" || field.type === "file" ? "col-span-2" : ""}
               >
                 <Label htmlFor={field.key} className="text-sm font-medium">
                   {field.label}
                   {field.required && <span className="text-red-500 ml-1">*</span>}
                 </Label>
-                {field.type === "textarea" ? (
+                {field.type === "file" ? (
+                  <div className="mt-1.5">
+                    <input
+                      ref={createFileRef}
+                      type="file"
+                      accept=".pdf,.doc,.docx,.txt,.rtf"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleFileUpload(file, "create");
+                      }}
+                    />
+                    {formData.resume ? (
+                      <div className="flex items-center gap-2 rounded-md border px-3 py-2">
+                        <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        <span className="text-sm flex-1 truncate">{formData.resume.split("|")[0]}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2"
+                          onClick={() => {
+                            setFormData((prev) => ({ ...prev, resume: "" }));
+                            if (createFileRef.current) createFileRef.current.value = "";
+                          }}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="gap-1.5 w-full justify-start"
+                        disabled={uploading}
+                        onClick={() => createFileRef.current?.click()}
+                      >
+                        {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+                        {uploading ? "Uploading..." : "Attach Resume (PDF, DOC, DOCX)"}
+                      </Button>
+                    )}
+                  </div>
+                ) : field.type === "textarea" ? (
                   <Textarea
                     id={field.key}
                     placeholder={field.placeholder}
@@ -791,6 +939,35 @@ export default function BenchSalesPage() {
               {FORM_FIELDS.map((field) => {
                 const val = viewRecord[field.key as keyof BenchSalesRecord];
                 if (!val) return null;
+                // Resume file field — show download link
+                if (field.key === "resume") {
+                  const str = String(val);
+                  const apiBase = process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") || "http://localhost:3001";
+                  if (str.includes("|/uploads/")) {
+                    const [fileName, fileUrl] = str.split("|");
+                    return (
+                      <div key={field.key} className="col-span-2">
+                        <p className="text-xs font-medium text-muted-foreground">{field.label}</p>
+                        <a
+                          href={`${apiBase}${fileUrl}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-sm text-blue-600 dark:text-blue-400 hover:underline mt-0.5"
+                        >
+                          <FileText className="h-4 w-4" />
+                          {fileName}
+                          <Download className="h-3.5 w-3.5" />
+                        </a>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div key={field.key} className="col-span-2">
+                      <p className="text-xs font-medium text-muted-foreground">{field.label}</p>
+                      <p className="text-sm mt-0.5">{str}</p>
+                    </div>
+                  );
+                }
                 const display = (field.type === "date" && val) ? formatDate(String(val)) : String(val);
                 return (
                   <div key={field.key} className={field.type === "textarea" ? "col-span-2" : ""}>
@@ -809,12 +986,54 @@ export default function BenchSalesPage() {
           {viewRecord && editing && (
             <div className="grid grid-cols-2 gap-4 py-4">
               {FORM_FIELDS.map((field) => (
-                <div key={field.key} className={field.type === "textarea" ? "col-span-2" : ""}>
+                <div key={field.key} className={field.type === "textarea" || field.type === "file" ? "col-span-2" : ""}>
                   <Label htmlFor={`edit-${field.key}`} className="text-sm font-medium">
                     {field.label}
                     {field.required && <span className="text-red-500 ml-1">*</span>}
                   </Label>
-                  {field.type === "textarea" ? (
+                  {field.type === "file" ? (
+                    <div className="mt-1.5">
+                      <input
+                        ref={editFileRef}
+                        type="file"
+                        accept=".pdf,.doc,.docx,.txt,.rtf"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleFileUpload(file, "edit");
+                        }}
+                      />
+                      {editData.resume ? (
+                        <div className="flex items-center gap-2 rounded-md border px-3 py-2">
+                          <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                          <span className="text-sm flex-1 truncate">{editData.resume.split("|")[0]}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2"
+                            onClick={() => {
+                              setEditData((prev) => ({ ...prev, resume: "" }));
+                              if (editFileRef.current) editFileRef.current.value = "";
+                            }}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="gap-1.5 w-full justify-start"
+                          disabled={uploading}
+                          onClick={() => editFileRef.current?.click()}
+                        >
+                          {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+                          {uploading ? "Uploading..." : "Attach Resume (PDF, DOC, DOCX)"}
+                        </Button>
+                      )}
+                    </div>
+                  ) : field.type === "textarea" ? (
                     <Textarea
                       id={`edit-${field.key}`}
                       placeholder={field.placeholder}
