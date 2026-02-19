@@ -157,6 +157,7 @@ model Tenant {
   notifications     Notification[]
   inviteTokens      InviteToken[]
   rolePermissions   RolePermission[]
+  benchSalesSubmissions BenchSalesSubmission[]
 
   @@map("tenants")
 }
@@ -616,4 +617,53 @@ model RefreshToken {
   @@index([userId])
   @@index([tokenHash])
   @@map("refresh_tokens")
+}
+
+model BenchSalesSubmission {
+  id                    String    @id @default(cuid())
+  tenantId              String
+  name                  String?
+  consultant            String
+  vendor                String?
+  client                String?
+  jobDuties             String?
+  recruiter             String?
+  batch                 String?
+  position              String?
+  resume                String?
+  cloud                 String?
+  startTime             DateTime?
+  endTime               DateTime?
+  interviewKind         String?
+  rating                String?
+  mentorsReview         String?
+  status                String?
+  interviewType         String?
+  comments              String?
+  duration              String?
+  submissionBy          String?
+  uniqueSubmissionId    String?
+  codingRequired        String?
+  interviewerName       String?
+  notes                 String?
+  vendorEmail           String?
+  vendorPhone           String?
+  projectDuration       String?
+  submissionType        String?
+  mentorsEmail          String?
+  vendorContactName     String?
+  billingRate           String?
+  workLocation          String?
+  vendorScreening       String?
+  submissionDate        DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([consultant])
+  @@index([status])
+  @@index([vendor])
+  @@map("bench_sales_submissions")
 }

@@ -18,6 +18,7 @@ import {
   LogOut,
   X,
   Circle,
+  TrendingUp,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -33,6 +34,7 @@ const navigation: { name: string; href: string; icon: typeof LayoutDashboard; pe
   { name: "Pipeline", href: "/pipeline", icon: Kanban, permission: "pipeline:read" },
   { name: "Interviews", href: "/interviews", icon: CalendarDays, permission: "interviews:read" },
   { name: "Tasks", href: "/tasks", icon: ClipboardList, permission: "tasks:read" },
+  { name: "Bench Sales", href: "/bench-sales", icon: TrendingUp, permission: "bench-sales:read" },
   { name: "Reports", href: "/reports", icon: BarChart3, permission: "reports:read" },
   { name: "Import", href: "/import", icon: Upload, permission: "import-export:create" },
   { name: "Team", href: "/team", icon: UsersRound, permission: "users:read" },

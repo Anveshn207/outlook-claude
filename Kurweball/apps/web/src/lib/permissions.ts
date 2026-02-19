@@ -14,7 +14,8 @@ export type Permission =
   | 'search:read' | 'search:reindex'
   | 'activities:read' | 'activities:create'
   | 'saved-views:read' | 'saved-views:create' | 'saved-views:update' | 'saved-views:delete'
-  | 'notifications:read' | 'notifications:update';
+  | 'notifications:read' | 'notifications:update'
+  | 'bench-sales:read' | 'bench-sales:create' | 'bench-sales:update' | 'bench-sales:delete';
 
 const ALL_PERMISSIONS: Permission[] = [
   'candidates:read', 'candidates:create', 'candidates:update', 'candidates:delete',
@@ -33,6 +34,7 @@ const ALL_PERMISSIONS: Permission[] = [
   'activities:read', 'activities:create',
   'saved-views:read', 'saved-views:create', 'saved-views:update', 'saved-views:delete',
   'notifications:read', 'notifications:update',
+  'bench-sales:read', 'bench-sales:create', 'bench-sales:update', 'bench-sales:delete',
 ];
 
 const READ_PERMISSIONS: Permission[] = ALL_PERMISSIONS.filter(p => p.endsWith(':read'));
@@ -50,6 +52,7 @@ const RECRUITER_PERMISSIONS: Permission[] = [
   'saved-views:create', 'saved-views:update', 'saved-views:delete',
   'import-export:create',
   'notifications:update',
+  'bench-sales:read', 'bench-sales:create', 'bench-sales:update',
 ];
 
 const MANAGER_PERMISSIONS: Permission[] = [

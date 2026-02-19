@@ -46,7 +46,11 @@ export type Permission =
   | 'saved-views:update'
   | 'saved-views:delete'
   | 'notifications:read'
-  | 'notifications:update';
+  | 'notifications:update'
+  | 'bench-sales:read'
+  | 'bench-sales:create'
+  | 'bench-sales:update'
+  | 'bench-sales:delete';
 
 const ALL_PERMISSIONS: Permission[] = [
   'candidates:read',
@@ -97,6 +101,10 @@ const ALL_PERMISSIONS: Permission[] = [
   'saved-views:delete',
   'notifications:read',
   'notifications:update',
+  'bench-sales:read',
+  'bench-sales:create',
+  'bench-sales:update',
+  'bench-sales:delete',
 ];
 
 export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
@@ -152,6 +160,9 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     'saved-views:delete',
     'notifications:read',
     'notifications:update',
+    'bench-sales:read',
+    'bench-sales:create',
+    'bench-sales:update',
   ],
 
   VIEWER: [
@@ -171,6 +182,7 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     'saved-views:read',
     'notifications:read',
     'import-export:read',
+    'bench-sales:read',
   ],
 };
 
