@@ -631,20 +631,17 @@ model BenchSalesSubmission {
   batch                 String?
   position              String?
   resume                String?
-  cloud                 String?
+  clientRound           String?
   startTime             DateTime?
   endTime               DateTime?
   interviewKind         String?
-  rating                String?
   status                String?
   interviewType         String?
   comments              String?
   duration              String?
   submissionBy          String?
   uniqueSubmissionId    String?
-  codingRequired        String?
   interviewerName       String?
-  notes                 String?
   vendorEmail           String?
   vendorPhone           String?
   projectDuration       String?

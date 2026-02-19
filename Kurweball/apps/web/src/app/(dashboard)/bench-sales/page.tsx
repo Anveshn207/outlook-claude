@@ -69,20 +69,17 @@ interface BenchSalesRecord {
   batch: string | null;
   position: string | null;
   resume: string | null;
-  cloud: string | null;
+  clientRound: string | null;
   startTime: string | null;
   endTime: string | null;
   interviewKind: string | null;
-  rating: string | null;
   status: string | null;
   interviewType: string | null;
   comments: string | null;
   duration: string | null;
   submissionBy: string | null;
   uniqueSubmissionId: string | null;
-  codingRequired: string | null;
   interviewerName: string | null;
-  notes: string | null;
   vendorEmail: string | null;
   vendorPhone: string | null;
   projectDuration: string | null;
@@ -134,13 +131,11 @@ const FORM_FIELDS: FormFieldDef[] = [
   { key: "name", label: "Name", type: "text", placeholder: "Record name / identifier" },
   { key: "recruiter", label: "Recruiter", type: "text", placeholder: "Recruiter name" },
   { key: "batch", label: "Batch", type: "text", placeholder: "Batch name" },
-  { key: "cloud", label: "Cloud", type: "text", placeholder: "e.g. Salesforce, AWS" },
+  { key: "clientRound", label: "Client Round", type: "text", placeholder: "e.g. Round 1, Final Round" },
   { key: "startTime", label: "Start Time", type: "date" },
   { key: "endTime", label: "End Time", type: "date" },
   { key: "interviewKind", label: "Interview Kind", type: "text", placeholder: "e.g. Client Round" },
-  { key: "rating", label: "Rating", type: "text", placeholder: "Rating" },
   { key: "duration", label: "Duration", type: "text", placeholder: "e.g. 60 Minutes" },
-  { key: "codingRequired", label: "Coding Required?", type: "text", placeholder: "Yes / No" },
   { key: "interviewerName", label: "Interviewer Name", type: "text", placeholder: "Interviewer(s)" },
   { key: "vendorEmail", label: "Vendor Email", type: "text", placeholder: "vendor@example.com" },
   { key: "vendorPhone", label: "Vendor Phone", type: "text", placeholder: "Phone number" },
@@ -148,7 +143,6 @@ const FORM_FIELDS: FormFieldDef[] = [
   { key: "projectDuration", label: "Project Duration", type: "text", placeholder: "e.g. 6 months" },
   { key: "jobDuties", label: "Job Duties", type: "textarea", placeholder: "Describe responsibilities..." },
   { key: "comments", label: "Comments", type: "textarea", placeholder: "Additional comments..." },
-  { key: "notes", label: "Notes", type: "textarea", placeholder: "Notes..." },
   { key: "resume", label: "Resume", type: "text", placeholder: "Resume URL or filename" },
   { key: "uniqueSubmissionId", label: "Unique Submission ID", type: "text", placeholder: "Unique ID" },
   { key: "vendorScreening", label: "Vendor Screening", type: "text", placeholder: "Screening details" },
@@ -171,19 +165,16 @@ const ALL_COLUMNS: ColumnDef[] = [
   { key: "name", header: "Name", defaultVisible: false },
   { key: "recruiter", header: "Recruiter", defaultVisible: false },
   { key: "batch", header: "Batch", defaultVisible: false },
-  { key: "cloud", header: "Cloud", defaultVisible: false },
+  { key: "clientRound", header: "Client Round", defaultVisible: false },
   { key: "startTime", header: "Start Time", defaultVisible: false },
   { key: "endTime", header: "End Time", defaultVisible: false },
   { key: "interviewKind", header: "Interview Kind", defaultVisible: false },
-  { key: "rating", header: "Rating", defaultVisible: false },
   { key: "comments", header: "Comments", defaultVisible: false },
   { key: "duration", header: "Duration", defaultVisible: false },
   { key: "jobDuties", header: "Job Duties", defaultVisible: false },
   { key: "resume", header: "Resume", defaultVisible: false },
   { key: "uniqueSubmissionId", header: "Unique Submission ID", defaultVisible: false },
-  { key: "codingRequired", header: "Coding Required?", defaultVisible: false },
   { key: "interviewerName", header: "Interviewer Name", defaultVisible: false },
-  { key: "notes", header: "Notes", defaultVisible: false },
   { key: "vendorEmail", header: "Vendor Email", defaultVisible: false },
   { key: "vendorPhone", header: "Vendor Phone", defaultVisible: false },
   { key: "projectDuration", header: "Project Duration", defaultVisible: false },

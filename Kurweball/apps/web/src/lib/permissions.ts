@@ -52,7 +52,7 @@ const RECRUITER_PERMISSIONS: Permission[] = [
   'saved-views:create', 'saved-views:update', 'saved-views:delete',
   'import-export:create',
   'notifications:update',
-  'bench-sales:read', 'bench-sales:create', 'bench-sales:update',
+  'bench-sales:read',
 ];
 
 const MANAGER_PERMISSIONS: Permission[] = [

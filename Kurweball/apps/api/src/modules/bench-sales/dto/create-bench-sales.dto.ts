@@ -46,7 +46,7 @@ export class CreateBenchSalesDto {
   @IsOptional()
   @IsString()
   @MaxLength(200)
-  cloud?: string;
+  clientRound?: string;
 
   @IsOptional()
   @IsDateString()
@@ -60,11 +60,6 @@ export class CreateBenchSalesDto {
   @IsString()
   @MaxLength(200)
   interviewKind?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(100)
-  rating?: string;
 
   @IsOptional()
   @IsString()
@@ -97,17 +92,8 @@ export class CreateBenchSalesDto {
 
   @IsOptional()
   @IsString()
-  @MaxLength(50)
-  codingRequired?: string;
-
-  @IsOptional()
-  @IsString()
   @MaxLength(500)
   interviewerName?: string;
-
-  @IsOptional()
-  @IsString()
-  notes?: string;
 
   @IsOptional()
   @IsString()

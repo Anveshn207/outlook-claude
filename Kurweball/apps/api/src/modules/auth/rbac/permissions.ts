@@ -116,7 +116,10 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
       p !== 'users:update' &&
       p !== 'settings:update' &&
       p !== 'search:reindex' &&
-      p !== 'tasks:delete',
+      p !== 'tasks:delete' &&
+      p !== 'bench-sales:create' &&
+      p !== 'bench-sales:update' &&
+      p !== 'bench-sales:delete',
   ),
 
   RECRUITER: [
@@ -161,8 +164,6 @@ export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     'notifications:read',
     'notifications:update',
     'bench-sales:read',
-    'bench-sales:create',
-    'bench-sales:update',
   ],
 
   VIEWER: [
