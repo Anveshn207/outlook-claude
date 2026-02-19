@@ -68,10 +68,6 @@ export class CreateBenchSalesDto {
 
   @IsOptional()
   @IsString()
-  mentorsReview?: string;
-
-  @IsOptional()
-  @IsString()
   @MaxLength(100)
   status?: string;
 
@@ -132,11 +128,6 @@ export class CreateBenchSalesDto {
   @IsString()
   @MaxLength(100)
   submissionType?: string;
-
-  @IsOptional()
-  @IsString()
-  @MaxLength(200)
-  mentorsEmail?: string;
 
   @IsOptional()
   @IsString()

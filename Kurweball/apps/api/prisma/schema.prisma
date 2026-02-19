@@ -636,7 +636,6 @@ model BenchSalesSubmission {
   endTime               DateTime?
   interviewKind         String?
   rating                String?
-  mentorsReview         String?
   status                String?
   interviewType         String?
   comments              String?
@@ -650,7 +649,6 @@ model BenchSalesSubmission {
   vendorPhone           String?
   projectDuration       String?
   submissionType        String?
-  mentorsEmail          String?
   vendorContactName     String?
   billingRate           String?
   workLocation          String?

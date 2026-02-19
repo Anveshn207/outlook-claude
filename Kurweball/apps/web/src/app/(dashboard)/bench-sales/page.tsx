@@ -74,7 +74,6 @@ interface BenchSalesRecord {
   endTime: string | null;
   interviewKind: string | null;
   rating: string | null;
-  mentorsReview: string | null;
   status: string | null;
   interviewType: string | null;
   comments: string | null;
@@ -88,7 +87,6 @@ interface BenchSalesRecord {
   vendorPhone: string | null;
   projectDuration: string | null;
   submissionType: string | null;
-  mentorsEmail: string | null;
   vendorContactName: string | null;
   billingRate: string | null;
   workLocation: string | null;
@@ -141,7 +139,6 @@ const FORM_FIELDS: FormFieldDef[] = [
   { key: "endTime", label: "End Time", type: "date" },
   { key: "interviewKind", label: "Interview Kind", type: "text", placeholder: "e.g. Client Round" },
   { key: "rating", label: "Rating", type: "text", placeholder: "Rating" },
-  { key: "mentorsReview", label: "Mentor's Review", type: "text", placeholder: "Review notes" },
   { key: "duration", label: "Duration", type: "text", placeholder: "e.g. 60 Minutes" },
   { key: "codingRequired", label: "Coding Required?", type: "text", placeholder: "Yes / No" },
   { key: "interviewerName", label: "Interviewer Name", type: "text", placeholder: "Interviewer(s)" },
@@ -149,7 +146,6 @@ const FORM_FIELDS: FormFieldDef[] = [
   { key: "vendorPhone", label: "Vendor Phone", type: "text", placeholder: "Phone number" },
   { key: "vendorContactName", label: "Vendor Contact Name", type: "text", placeholder: "Contact person" },
   { key: "projectDuration", label: "Project Duration", type: "text", placeholder: "e.g. 6 months" },
-  { key: "mentorsEmail", label: "Mentor's Email", type: "text", placeholder: "mentor@example.com" },
   { key: "jobDuties", label: "Job Duties", type: "textarea", placeholder: "Describe responsibilities..." },
   { key: "comments", label: "Comments", type: "textarea", placeholder: "Additional comments..." },
   { key: "notes", label: "Notes", type: "textarea", placeholder: "Notes..." },
@@ -180,7 +176,6 @@ const ALL_COLUMNS: ColumnDef[] = [
   { key: "endTime", header: "End Time", defaultVisible: false },
   { key: "interviewKind", header: "Interview Kind", defaultVisible: false },
   { key: "rating", header: "Rating", defaultVisible: false },
-  { key: "mentorsReview", header: "Mentor's Review", defaultVisible: false },
   { key: "comments", header: "Comments", defaultVisible: false },
   { key: "duration", header: "Duration", defaultVisible: false },
   { key: "jobDuties", header: "Job Duties", defaultVisible: false },
@@ -192,7 +187,6 @@ const ALL_COLUMNS: ColumnDef[] = [
   { key: "vendorEmail", header: "Vendor Email", defaultVisible: false },
   { key: "vendorPhone", header: "Vendor Phone", defaultVisible: false },
   { key: "projectDuration", header: "Project Duration", defaultVisible: false },
-  { key: "mentorsEmail", header: "Mentor's Email", defaultVisible: false },
   { key: "vendorContactName", header: "Vendor Contact Name", defaultVisible: false },
   { key: "vendorScreening", header: "Vendor Screening", defaultVisible: false },
 ];
