@@ -42,7 +42,10 @@
       "Bash(cmd.exe /c start outlook)",
       "Bash(cmd.exe /c start \"\" \"outlook:\")",
       "Bash(cmd.exe /c start \"\" \"shell:AppsFolder\\\\Microsoft.OutlookForWindows_8wekyb3d8bbwe!Microsoft.OutlookforWindows\")",
-      "Bash(cmd.exe /c start msedge \"https://outlook.office.com/mail/\")"
+      "Bash(cmd.exe /c start msedge \"https://outlook.office.com/mail/\")",
+      "Bash(test:*)",
+      "Bash(ACCESS_TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbWxsYWxpY2MwMDAyNjFld29hZW90NjlyIiwiZW1haWwiOiJhbnZlc2gubkBlbmdpbmVlcmluZ3NxdWFyZS51cyIsInRlbmFudElkIjoiY21sbGFsaTU0MDAwMDYxZXc5amxsamthZiIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc3MTUyOTc0NSwiZXhwIjoxNzcxNTMwNjQ1fQ.d5O_Pl4SyX0ICdPwQbVLtxrzTKtDOOSInfl4it3gIZ4\")",
+      "Bash(printf:*)"
     ]
   }
 }

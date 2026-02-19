@@ -1,12 +1,23 @@
 import { Injectable } from '@nestjs/common';
+import * as fs from 'fs';
 import * as XLSX from 'xlsx';
 import * as path from 'path';
 import { ParsedFileResult } from './types/import.types';
 
 @Injectable()
 export class FileParserService {
-  async parseFile(filePath: string): Promise<ParsedFileResult> {
-    const workbook = XLSX.readFile(filePath);
+  async parseFile(filePath: string, originalName?: string): Promise<ParsedFileResult> {
+    // Multer saves files without extensions. Read the buffer and use
+    // the original filename extension to determine the correct format.
+    const ext = originalName
+      ? path.extname(originalName).toLowerCase()
+      : path.extname(filePath).toLowerCase();
+
+    const buf = fs.readFileSync(filePath);
+    const workbook = ext === '.csv'
+      ? XLSX.read(buf.toString('utf-8'), { type: 'string' })
+      : XLSX.read(buf, { type: 'buffer' });
+
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
 
@@ -16,7 +27,7 @@ export class FileParserService {
     });
 
     const columns = rows.length > 0 ? Object.keys(rows[0]) : [];
-    const fileId = path.basename(filePath, path.extname(filePath));
+    const fileId = path.basename(filePath);
 
     return {
       fileId,

@@ -35,7 +35,7 @@ export class ImportService {
     file: Express.Multer.File,
     entityType: ImportEntityType,
   ): Promise<ParsedFileResult> {
-    return this.fileParser.parseFile(file.path);
+    return this.fileParser.parseFile(file.path, file.originalname);
   }
 
   /**
@@ -162,7 +162,8 @@ export class ImportService {
    */
   private async getAllRows(filePath: string): Promise<Record<string, string>[]> {
     const XLSX = await import('xlsx');
-    const workbook = XLSX.readFile(filePath);
+    const buf = await fs.readFile(filePath);
+    const workbook = XLSX.read(buf, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
 

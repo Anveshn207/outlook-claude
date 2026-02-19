@@ -13,13 +13,19 @@ import { ExportController } from './export.controller';
       dest: './uploads/imports',
       limits: { fileSize: 10 * 1024 * 1024 },
       fileFilter: (_req, file, cb) => {
-        const allowed = [
+        const allowedMimes = [
           'text/csv',
+          'application/csv',
           'application/vnd.ms-excel',
           'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           'text/plain',
+          'application/octet-stream', // Some browsers send this for xlsx/csv
         ];
-        if (allowed.includes(file.mimetype)) {
+        const allowedExts = ['.csv', '.xlsx', '.xls'];
+        const ext = file.originalname
+          ? '.' + file.originalname.split('.').pop()?.toLowerCase()
+          : '';
+        if (allowedMimes.includes(file.mimetype) || allowedExts.includes(ext)) {
           cb(null, true);
         } else {
           cb(new Error('Only CSV and Excel files are allowed'), false);

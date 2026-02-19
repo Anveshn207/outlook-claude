@@ -218,7 +218,14 @@ export function ImportDialog({
         let message: string;
         try {
           const parsed = JSON.parse(body);
-          message = parsed.message || parsed.error || body;
+          // API returns { error: { message: "..." } } structure
+          message =
+            (parsed.error && typeof parsed.error === "object"
+              ? parsed.error.message
+              : null) ||
+            parsed.message ||
+            (typeof parsed.error === "string" ? parsed.error : null) ||
+            body;
         } catch {
           message = body;
         }
