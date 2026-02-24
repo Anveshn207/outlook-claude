@@ -46,7 +46,8 @@
       "Bash(test:*)",
       "Bash(ACCESS_TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbWxsYWxpY2MwMDAyNjFld29hZW90NjlyIiwiZW1haWwiOiJhbnZlc2gubkBlbmdpbmVlcmluZ3NxdWFyZS51cyIsInRlbmFudElkIjoiY21sbGFsaTU0MDAwMDYxZXc5amxsamthZiIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc3MTUyOTc0NSwiZXhwIjoxNzcxNTMwNjQ1fQ.d5O_Pl4SyX0ICdPwQbVLtxrzTKtDOOSInfl4it3gIZ4\")",
       "Bash(printf:*)",
-      "Bash(# Check what API_BASE_URL resolves to in the frontend # And check Next.js config for proxy/rewrites cd \"\"/c/Outlook Claude/Kurweball/apps/web\"\" grep -r \"\"NEXT_PUBLIC_API_URL\"\" . --include=\"\"*.ts\"\" --include=\"\"*.tsx\"\" --include=\"\"*.js\"\")"
+      "Bash(# Check what API_BASE_URL resolves to in the frontend # And check Next.js config for proxy/rewrites cd \"\"/c/Outlook Claude/Kurweball/apps/web\"\" grep -r \"\"NEXT_PUBLIC_API_URL\"\" . --include=\"\"*.ts\"\" --include=\"\"*.tsx\"\" --include=\"\"*.js\"\")",
+      "Bash(__NEW_LINE_6e0ba6f3dc8f5385__ echo \"\")"
     ]
   }
 }

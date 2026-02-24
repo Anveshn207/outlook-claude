@@ -1,5 +1,5 @@
-import { IsOptional, IsEnum, IsString, IsInt, IsIn, Min, Max } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsOptional, IsEnum, IsString, IsInt, IsIn, IsBoolean, Min, Max } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 import { CandidateSource, CandidateStatus } from '@prisma/client';
 
 export class QueryCandidatesDto {
@@ -35,4 +35,9 @@ export class QueryCandidatesDto {
   @IsOptional()
   @IsIn(['asc', 'desc'])
   sortOrder?: 'asc' | 'desc' = 'desc';
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
+  hasLinkedin?: boolean;
 }

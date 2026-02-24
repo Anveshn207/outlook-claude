@@ -18,6 +18,7 @@ type ExportFormat = "csv" | "xlsx" | "docx";
 
 interface ExportDropdownProps {
   entity: ExportEntity;
+  filters?: Record<string, string>;
 }
 
 const FORMAT_CONFIG: Record<
@@ -44,7 +45,7 @@ const FORMAT_CONFIG: Record<
   },
 };
 
-export function ExportDropdown({ entity }: ExportDropdownProps) {
+export function ExportDropdown({ entity, filters }: ExportDropdownProps) {
   const [loadingFormat, setLoadingFormat] = useState<ExportFormat | null>(null);
 
   const handleExport = useCallback(
@@ -52,8 +53,14 @@ export function ExportDropdown({ entity }: ExportDropdownProps) {
       setLoadingFormat(format);
 
       try {
+        const params = new URLSearchParams({ format });
+        if (filters) {
+          Object.entries(filters).forEach(([key, value]) => {
+            if (value && value !== "all") params.set(key, value);
+          });
+        }
         const response = await fetch(
-          `${API_BASE_URL}/export/${entity}?format=${format}`,
+          `${API_BASE_URL}/export/${entity}?${params}`,
           {
             method: "GET",
             credentials: "include",
@@ -96,7 +103,7 @@ export function ExportDropdown({ entity }: ExportDropdownProps) {
         setLoadingFormat(null);
       }
     },
-    [entity],
+    [entity, filters],
   );
 
   return (

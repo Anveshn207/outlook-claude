@@ -57,9 +57,15 @@ export class ExportService {
       where.status = status;
     }
 
-    const candidates = await this.prisma.candidate.findMany({ where });
+    const candidates = await this.prisma.candidate.findMany({
+      where,
+      include: {
+        createdBy: { select: { firstName: true, lastName: true } },
+      },
+    });
 
     const headers = [
+      'Applicant ID',
       'First Name',
       'Last Name',
       'Email',
@@ -67,12 +73,23 @@ export class ExportService {
       'Title',
       'Employer',
       'Location',
+      'State',
+      'Visa Status',
+      'LinkedIn URL',
+      'Rate',
+      'Rate Type',
+      'Availability',
+      'Date of Birth',
       'Source',
       'Status',
       'Skills',
+      'Tags',
+      'Created By',
+      'Created At',
     ];
 
     const rows = candidates.map((c) => [
+      c.applicantId ?? '',
       c.firstName,
       c.lastName,
       c.email ?? '',
@@ -80,9 +97,19 @@ export class ExportService {
       c.title ?? '',
       c.currentEmployer ?? '',
       c.location ?? '',
+      c.state ?? '',
+      c.visaStatus ?? '',
+      c.linkedinUrl ?? '',
+      c.rate ? String(c.rate) : '',
+      c.rateType ?? '',
+      c.availability ?? '',
+      c.dateOfBirth ? new Date(c.dateOfBirth).toLocaleDateString() : '',
       c.source,
       c.status,
       c.skills.join(', '),
+      c.tags.join(', '),
+      c.createdBy ? `${c.createdBy.firstName} ${c.createdBy.lastName}` : '',
+      new Date(c.createdAt).toLocaleDateString(),
     ]);
 
     return this.buildExport('candidates', headers, rows, format);

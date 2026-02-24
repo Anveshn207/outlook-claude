@@ -24,6 +24,13 @@ export class CandidatesService {
       where.source = query.source;
     }
 
+    if (query.hasLinkedin) {
+      where.AND = [
+        { linkedinUrl: { not: null } },
+        { linkedinUrl: { not: '' } },
+      ];
+    }
+
     if (query.search) {
       where.OR = [
         { firstName: { contains: query.search, mode: 'insensitive' } },

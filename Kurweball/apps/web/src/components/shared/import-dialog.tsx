@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,8 @@ import {
   AlertCircle,
   FileSpreadsheet,
   Sparkles,
+  Trash2,
+  RotateCcw,
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { ColumnMappingTable } from "./column-mapping-table";
@@ -61,6 +63,14 @@ interface ImportResult {
   created: number;
   skipped: number;
   errors: { row: number; message: string }[];
+}
+
+interface UploadedFile {
+  fileId: string;
+  columns: string[];
+  totalRows: number;
+  sizeBytes: number;
+  uploadedAt: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -151,7 +161,7 @@ export function ImportDialog({
   const [error, setError] = useState<string | null>(null);
 
   // Step 1
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Step 2
@@ -164,8 +174,27 @@ export function ImportDialog({
   // Auto-mapping indicator
   const [autoMapped, setAutoMapped] = useState(false);
 
+  // Previously uploaded files
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [loadingFiles, setLoadingFiles] = useState(false);
+
   const entityFields = ENTITY_FIELDS[entityType];
   const entityLabel = ENTITY_LABELS[entityType];
+
+  // -------------------------------------------------------------------------
+  // Fetch previously uploaded files
+  // -------------------------------------------------------------------------
+  const fetchUploadedFiles = useCallback(async () => {
+    setLoadingFiles(true);
+    try {
+      const files = await apiFetch<UploadedFile[]>("/import/files");
+      setUploadedFiles(files);
+    } catch (err) {
+      console.error("[ImportDialog] Failed to fetch files:", err);
+    } finally {
+      setLoadingFiles(false);
+    }
+  }, []);
 
   // -------------------------------------------------------------------------
   // Reset state when dialog opens/closes
@@ -176,71 +205,145 @@ export function ImportDialog({
         setStep(1);
         setLoading(false);
         setError(null);
-        setSelectedFile(null);
+        setSelectedFiles([]);
         setParsedFile(null);
         setMappings([]);
         setImportResult(null);
         setAutoMapped(false);
+      } else {
+        fetchUploadedFiles();
       }
       onOpenChange(isOpen);
     },
-    [onOpenChange],
+    [onOpenChange, fetchUploadedFiles],
   );
+
+  useEffect(() => {
+    if (open) fetchUploadedFiles();
+  }, [open, fetchUploadedFiles]);
 
   // -------------------------------------------------------------------------
   // Step 1 - Upload
   // -------------------------------------------------------------------------
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] ?? null;
-    setSelectedFile(file);
+    const files = e.target.files;
+    if (files) {
+      setSelectedFiles(Array.from(files));
+    }
     setError(null);
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) return;
+    if (selectedFiles.length === 0) return;
 
     setLoading(true);
     setError(null);
 
     try {
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-      formData.append("entityType", entityType);
+      if (selectedFiles.length === 1) {
+        // Single file — use original endpoint, auto-advance to mapping
+        const formData = new FormData();
+        formData.append("file", selectedFiles[0]);
+        formData.append("entityType", entityType);
 
-      const response = await fetch(`${API_BASE_URL}/import/upload`, {
-        method: "POST",
-        credentials: "include",
-        body: formData,
-      });
+        const response = await fetch(`${API_BASE_URL}/import/upload`, {
+          method: "POST",
+          credentials: "include",
+          body: formData,
+        });
 
-      if (!response.ok) {
-        const body = await response.text();
-        let message: string;
-        try {
-          const parsed = JSON.parse(body);
-          // API returns { error: { message: "..." } } structure
-          message =
-            (parsed.error && typeof parsed.error === "object"
-              ? parsed.error.message
-              : null) ||
-            parsed.message ||
-            (typeof parsed.error === "string" ? parsed.error : null) ||
-            body;
-        } catch {
-          message = body;
+        if (!response.ok) {
+          const body = await response.text();
+          let message: string;
+          try {
+            const parsed = JSON.parse(body);
+            message =
+              (parsed.error && typeof parsed.error === "object"
+                ? parsed.error.message
+                : null) ||
+              parsed.message ||
+              (typeof parsed.error === "string" ? parsed.error : null) ||
+              body;
+          } catch {
+            message = body;
+          }
+          throw new Error(message);
         }
-        throw new Error(message);
-      }
 
-      const result: ParsedFileResult = await response.json();
-      setParsedFile(result);
-      setStep(2);
-      await analyzeColumns(result);
+        const result: ParsedFileResult = await response.json();
+        setParsedFile(result);
+        setStep(2);
+        await analyzeColumns(result);
+      } else {
+        // Multiple files — bulk upload, stay on step 1 so user picks which to map
+        const formData = new FormData();
+        selectedFiles.forEach((f) => formData.append("files", f));
+        formData.append("entityType", entityType);
+
+        const response = await fetch(`${API_BASE_URL}/import/upload-bulk`, {
+          method: "POST",
+          credentials: "include",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const body = await response.text();
+          let message: string;
+          try {
+            const parsed = JSON.parse(body);
+            message =
+              (parsed.error && typeof parsed.error === "object"
+                ? parsed.error.message
+                : null) ||
+              parsed.message ||
+              (typeof parsed.error === "string" ? parsed.error : null) ||
+              body;
+          } catch {
+            message = body;
+          }
+          throw new Error(message);
+        }
+
+        const results: ParsedFileResult[] = await response.json();
+        setSelectedFiles([]);
+        await fetchUploadedFiles(); // Refresh the file list
+        setError(null);
+      }
     } catch (err) {
       console.error("[ImportDialog] Upload failed:", err);
       setError(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // -------------------------------------------------------------------------
+  // Use a previously uploaded file
+  // -------------------------------------------------------------------------
+  const handleReparseFile = async (fileId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result: ParsedFileResult = await apiFetch(`/import/reparse/${fileId}`, {
+        method: "POST",
+      });
+      setParsedFile(result);
+      setStep(2);
+      await analyzeColumns(result);
+    } catch (err) {
+      console.error("[ImportDialog] Reparse failed:", err);
+      setError(err instanceof Error ? err.message : "Failed to parse file");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteFile = async (fileId: string) => {
+    try {
+      await apiFetch(`/import/files/${fileId}`, { method: "DELETE" });
+      setUploadedFiles((prev) => prev.filter((f) => f.fileId !== fileId));
+    } catch (err) {
+      console.error("[ImportDialog] Delete failed:", err);
     }
   };
 
@@ -401,48 +504,113 @@ export function ImportDialog({
               <FileSpreadsheet className="h-10 w-10 text-muted-foreground" />
               <div className="text-center">
                 <p className="text-sm font-medium">
-                  Click to select a file
+                  Click to select files
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Supports CSV, XLSX, and XLS files
+                  Supports CSV, XLSX, and XLS &middot; Select multiple files at once
                 </p>
               </div>
               <input
                 ref={fileInputRef}
                 type="file"
                 accept=".csv,.xlsx,.xls"
+                multiple
                 onChange={handleFileSelect}
                 className="hidden"
               />
             </div>
 
-            {selectedFile && (
-              <div className="flex items-center gap-3 rounded-md border bg-muted/30 p-3">
-                <FileSpreadsheet className="h-5 w-5 text-primary shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">
-                    {selectedFile.name}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatFileSize(selectedFile.size)}
-                  </p>
-                </div>
+            {selectedFiles.length > 0 && (
+              <div className="space-y-1.5">
+                {selectedFiles.map((file, i) => (
+                  <div key={i} className="flex items-center gap-3 rounded-md border bg-muted/30 p-2.5">
+                    <FileSpreadsheet className="h-4 w-4 text-primary shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {file.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatFileSize(file.size)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                <p className="text-xs text-muted-foreground">
+                  {selectedFiles.length} file{selectedFiles.length > 1 ? "s" : ""} selected
+                </p>
               </div>
             )}
 
             <div className="flex justify-end">
               <Button
                 onClick={handleUpload}
-                disabled={!selectedFile || loading}
+                disabled={selectedFiles.length === 0 || loading}
               >
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Upload className="h-4 w-4" />
                 )}
-                {loading ? "Uploading..." : "Upload"}
+                {loading
+                  ? "Uploading..."
+                  : selectedFiles.length > 1
+                    ? `Upload ${selectedFiles.length} Files`
+                    : "Upload"}
               </Button>
             </div>
+
+            {/* Previously uploaded files */}
+            {uploadedFiles.length > 0 && (
+              <div className="space-y-2 border-t pt-4">
+                <p className="text-sm font-medium text-muted-foreground">
+                  Previously Uploaded Files
+                </p>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {uploadedFiles.map((f) => (
+                    <div
+                      key={f.fileId}
+                      className="flex items-center gap-3 rounded-md border bg-muted/20 p-2.5 hover:bg-muted/40 transition-colors"
+                    >
+                      <FileSpreadsheet className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium truncate">
+                          {f.columns.slice(0, 4).join(", ")}
+                          {f.columns.length > 4 && ` +${f.columns.length - 4} more`}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {f.totalRows} rows &middot; {formatFileSize(f.sizeBytes)} &middot;{" "}
+                          {new Date(f.uploadedAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs shrink-0"
+                        disabled={loading}
+                        onClick={() => handleReparseFile(f.fileId)}
+                      >
+                        <RotateCcw className="h-3 w-3 mr-1" />
+                        Re-import
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-red-500 shrink-0"
+                        onClick={() => handleDeleteFile(f.fileId)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {loadingFiles && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Loading previous uploads...
+              </div>
+            )}
           </div>
         )}
 
@@ -469,7 +637,7 @@ export function ImportDialog({
                     variant="outline"
                     onClick={() => {
                       setStep(1);
-                      setSelectedFile(null);
+                      setSelectedFiles([]);
                       setParsedFile(null);
                       setMappings([]);
                     }}

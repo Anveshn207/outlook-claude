@@ -1,13 +1,17 @@
 import {
   Controller,
   Post,
+  Get,
+  Delete,
+  Param,
   Body,
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  UploadedFiles,
   BadRequestException,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
   CurrentUser,
@@ -23,6 +27,24 @@ import { RequirePermissions } from '../auth/rbac';
 @UseGuards(JwtAuthGuard)
 export class ImportController {
   constructor(private readonly importService: ImportService) {}
+
+  @Get('files')
+  @RequirePermissions('import-export:read')
+  listFiles() {
+    return this.importService.listUploadedFiles();
+  }
+
+  @Delete('files/:fileId')
+  @RequirePermissions('import-export:delete')
+  deleteFile(@Param('fileId') fileId: string) {
+    return this.importService.deleteUploadedFile(fileId);
+  }
+
+  @Post('reparse/:fileId')
+  @RequirePermissions('import-export:create')
+  reparse(@Param('fileId') fileId: string) {
+    return this.importService.reparseFile(fileId);
+  }
 
   @Post('upload')
   @RequirePermissions('import-export:create')
@@ -40,6 +62,29 @@ export class ImportController {
       file,
       dto.entityType,
     );
+  }
+
+  @Post('upload-bulk')
+  @RequirePermissions('import-export:create')
+  @UseInterceptors(FilesInterceptor('files', 20))
+  async uploadBulk(
+    @UploadedFiles() files: Express.Multer.File[],
+    @Body() dto: UploadImportDto,
+    @CurrentUser() user: CurrentUserPayload,
+  ) {
+    if (!files || files.length === 0) {
+      throw new BadRequestException('At least one file is required');
+    }
+    const results = [];
+    for (const file of files) {
+      const parsed = await this.importService.uploadAndParse(
+        user.tenantId,
+        file,
+        dto.entityType,
+      );
+      results.push(parsed);
+    }
+    return results;
   }
 
   @Post('analyze')

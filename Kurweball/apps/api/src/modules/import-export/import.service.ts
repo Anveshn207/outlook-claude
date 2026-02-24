@@ -28,6 +28,83 @@ export class ImportService {
   ) {}
 
   /**
+   * List all previously uploaded import files with metadata.
+   */
+  async listUploadedFiles() {
+    const baseDir = path.resolve('./uploads/imports');
+    try {
+      await fs.access(baseDir);
+    } catch {
+      return [];
+    }
+
+    const entries = await fs.readdir(baseDir);
+    const files = [];
+
+    for (const entry of entries) {
+      const filePath = path.join(baseDir, entry);
+      const stat = await fs.stat(filePath);
+      if (!stat.isFile()) continue;
+
+      try {
+        const XLSX = await import('xlsx');
+        const buf = await fs.readFile(filePath);
+        const workbook = XLSX.read(buf, { type: 'buffer' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+
+        const headerRow = this.fileParser.detectHeaderRow(sheet);
+        const rows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, {
+          raw: false,
+          defval: '',
+          range: headerRow,
+        });
+
+        const columns = rows.length > 0 ? Object.keys(rows[0]) : [];
+
+        files.push({
+          fileId: entry,
+          columns,
+          totalRows: rows.length,
+          sizeBytes: stat.size,
+          uploadedAt: stat.mtime.toISOString(),
+        });
+      } catch (err) {
+        this.logger.warn(`[ImportService] Could not parse file ${entry}: ${err}`);
+      }
+    }
+
+    return files.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
+  }
+
+  /**
+   * Delete an uploaded import file.
+   */
+  async deleteUploadedFile(fileId: string) {
+    const baseDir = path.resolve('./uploads/imports');
+    const safeName = path.basename(fileId);
+    const filePath = path.resolve(baseDir, safeName);
+    if (!filePath.startsWith(baseDir)) {
+      throw new BadRequestException('Invalid file ID');
+    }
+    await fs.unlink(filePath);
+    return { deleted: true };
+  }
+
+  /**
+   * Re-parse an existing uploaded file for re-import.
+   */
+  async reparseFile(fileId: string): Promise<ParsedFileResult> {
+    const baseDir = path.resolve('./uploads/imports');
+    const safeName = path.basename(fileId);
+    const filePath = path.resolve(baseDir, safeName);
+    if (!filePath.startsWith(baseDir)) {
+      throw new BadRequestException('Invalid file ID');
+    }
+    return this.fileParser.parseFile(filePath, fileId);
+  }
+
+  /**
    * Step 1: Upload a file and parse it to extract columns and sample rows.
    */
   async uploadAndParse(

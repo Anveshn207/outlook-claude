@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Upload, Trash2 } from "lucide-react";
+import { Plus, Upload, Trash2, Linkedin } from "lucide-react";
 import { ExportDropdown } from "@/components/shared/export-dropdown";
 import { ImportDialog } from "@/components/shared/import-dialog";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,7 @@ interface Candidate {
   title: string | null;
   currentEmployer: string | null;
   location: string | null;
+  linkedinUrl: string | null;
   skills: string[];
   customData?: Record<string, unknown>;
   createdBy: { id: string; firstName: string; lastName: string };
@@ -66,6 +67,7 @@ const sourceLabels: Record<string, string> = {
 export default function CandidatesPage() {
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [linkedinFilter, setLinkedinFilter] = useState<string>("all");
   const [showCreate, setShowCreate] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -91,6 +93,8 @@ export default function CandidatesPage() {
       if (params.sortOrder) query.set("sortOrder", params.sortOrder);
       if (statusFilter && statusFilter !== "all")
         query.set("status", statusFilter);
+      if (linkedinFilter === "yes")
+        query.set("hasLinkedin", "true");
 
       const res = await apiFetch<{
         data: Candidate[];
@@ -98,7 +102,7 @@ export default function CandidatesPage() {
       }>(`/candidates?${query}`);
       return { data: res.data, total: res.meta.total };
     },
-    [statusFilter],
+    [statusFilter, linkedinFilter],
   );
 
   const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -149,9 +153,23 @@ export default function CandidatesPage() {
         header: "Name",
         sortable: true,
         render: (c) => (
-          <span className="font-medium text-foreground">
-            {c.firstName} {c.lastName}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="font-medium text-foreground">
+              {c.firstName} {c.lastName}
+            </span>
+            {c.linkedinUrl && (
+              <a
+                href={c.linkedinUrl.startsWith("http") ? c.linkedinUrl : `https://${c.linkedinUrl}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="text-[#0A66C2] hover:text-[#004182] dark:text-[#71b7fb] dark:hover:text-[#9ecbff] shrink-0"
+                title="View LinkedIn Profile"
+              >
+                <Linkedin className="h-3.5 w-3.5" />
+              </a>
+            )}
+          </div>
         ),
       },
       {
@@ -239,7 +257,12 @@ export default function CandidatesPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {can("import-export:read") && <ExportDropdown entity="candidates" />}
+          {can("import-export:read") && (
+            <ExportDropdown
+              entity="candidates"
+              filters={{ status: statusFilter, hasLinkedin: linkedinFilter === "yes" ? "true" : "" }}
+            />
+          )}
           {can("import-export:create") && (
             <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
               <Upload className="h-4 w-4" />
@@ -316,18 +339,29 @@ export default function CandidatesPage() {
             : []),
         ]}
         toolbar={
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="All Statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="ACTIVE">Active</SelectItem>
-              <SelectItem value="PASSIVE">Passive</SelectItem>
-              <SelectItem value="DND">DND</SelectItem>
-              <SelectItem value="PLACED">Placed</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="ACTIVE">Active</SelectItem>
+                <SelectItem value="PASSIVE">Passive</SelectItem>
+                <SelectItem value="DND">DND</SelectItem>
+                <SelectItem value="PLACED">Placed</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={linkedinFilter} onValueChange={setLinkedinFilter}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="LinkedIn" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Candidates</SelectItem>
+                <SelectItem value="yes">Has LinkedIn</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         }
       />
 
