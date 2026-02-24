@@ -23,6 +23,7 @@ export class ExportController {
       query.format,
       query.search,
       query.status,
+      query.hasLinkedin,
     );
     res.setHeader('Content-Type', result.contentType);
     res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);

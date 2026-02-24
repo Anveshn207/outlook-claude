@@ -71,6 +71,7 @@ export interface DataTableProps<T> {
   keyExtractor: (item: T) => string;
   selectable?: boolean;
   bulkActions?: BulkAction[];
+  onSearchChange?: (search: string) => void;
 }
 
 export function DataTable<T>({
@@ -84,6 +85,7 @@ export function DataTable<T>({
   keyExtractor,
   selectable = false,
   bulkActions = [],
+  onSearchChange,
 }: DataTableProps<T>) {
   const [data, setData] = useState<T[]>([]);
   const [total, setTotal] = useState(0);
@@ -127,7 +129,8 @@ export function DataTable<T>({
   useEffect(() => {
     setPage(1);
     setSelectedIds(new Set());
-  }, [debouncedSearch]);
+    onSearchChange?.(debouncedSearch);
+  }, [debouncedSearch, onSearchChange]);
 
   // Clear selection on page/sort change
   useEffect(() => {

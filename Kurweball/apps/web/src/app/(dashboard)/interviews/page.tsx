@@ -92,6 +92,7 @@ export default function InterviewsPage() {
   const { user: _user } = useAuthStore();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -433,7 +434,12 @@ export default function InterviewsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {can("import-export:read") && <ExportDropdown entity="interviews" />}
+          {can("import-export:read") && (
+            <ExportDropdown
+              entity="interviews"
+              filters={{ status: statusFilter, search: searchTerm }}
+            />
+          )}
           <Button onClick={() => setShowCreate(true)} className="w-fit">
             <Plus className="h-4 w-4" />
             Schedule Interview
@@ -446,6 +452,7 @@ export default function InterviewsPage() {
         key={refreshKey}
         columns={columns}
         fetchData={fetchInterviews}
+        onSearchChange={setSearchTerm}
         searchPlaceholder="Search interviews..."
         keyExtractor={(row) => row.id}
         emptyMessage="No interviews found. Schedule your first interview to get started."

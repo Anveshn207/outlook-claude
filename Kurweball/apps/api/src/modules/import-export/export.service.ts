@@ -42,6 +42,7 @@ export class ExportService {
     format: ExportFormat,
     search?: string,
     status?: string,
+    hasLinkedin?: boolean,
   ): Promise<ExportResult> {
     const where: any = { tenantId };
 
@@ -55,6 +56,13 @@ export class ExportService {
 
     if (status) {
       where.status = status;
+    }
+
+    if (hasLinkedin) {
+      where.AND = [
+        { linkedinUrl: { not: null } },
+        { linkedinUrl: { not: '' } },
+      ];
     }
 
     const candidates = await this.prisma.candidate.findMany({

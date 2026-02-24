@@ -73,6 +73,7 @@ const jobTypeLabels: Record<string, string> = {
 export default function JobsPage() {
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -252,7 +253,12 @@ export default function JobsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {can("import-export:read") && <ExportDropdown entity="jobs" />}
+          {can("import-export:read") && (
+            <ExportDropdown
+              entity="jobs"
+              filters={{ status: statusFilter, search: searchTerm }}
+            />
+          )}
           {can("import-export:create") && (
             <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
               <Upload className="h-4 w-4" />
@@ -272,6 +278,7 @@ export default function JobsPage() {
         key={refreshKey}
         columns={columns}
         fetchData={fetchJobs}
+        onSearchChange={setSearchTerm}
         searchPlaceholder="Search jobs..."
         keyExtractor={(j) => j.id}
         onRowClick={(j) => router.push(`/jobs/${j.id}`)}

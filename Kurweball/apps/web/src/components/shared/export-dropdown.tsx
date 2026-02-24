@@ -9,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "/api";
@@ -47,6 +48,7 @@ const FORMAT_CONFIG: Record<
 
 export function ExportDropdown({ entity, filters }: ExportDropdownProps) {
   const [loadingFormat, setLoadingFormat] = useState<ExportFormat | null>(null);
+  const toast = useToast((s) => s.toast);
 
   const handleExport = useCallback(
     async (format: ExportFormat) => {
@@ -54,18 +56,22 @@ export function ExportDropdown({ entity, filters }: ExportDropdownProps) {
 
       try {
         const params = new URLSearchParams({ format });
+        const appliedFilters: string[] = [];
         if (filters) {
           Object.entries(filters).forEach(([key, value]) => {
-            if (value && value !== "all") params.set(key, value);
+            if (value && value !== "all") {
+              params.set(key, value);
+              appliedFilters.push(`${key}=${value}`);
+            }
           });
         }
-        const response = await fetch(
-          `${API_BASE_URL}/export/${entity}?${params}`,
-          {
-            method: "GET",
-            credentials: "include",
-          },
-        );
+        const url = `${API_BASE_URL}/export/${entity}?${params}`;
+        console.log(`[ExportDropdown] Exporting: ${url}, filters:`, appliedFilters);
+
+        const response = await fetch(url, {
+          method: "GET",
+          credentials: "include",
+        });
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -86,24 +92,37 @@ export function ExportDropdown({ entity, filters }: ExportDropdownProps) {
         const timestamp = new Date().toISOString().slice(0, 10);
         const filename = `${entity}-${timestamp}.${config.extension}`;
 
-        const url = URL.createObjectURL(blob);
+        const downloadUrl = URL.createObjectURL(blob);
         const link = document.createElement("a");
-        link.href = url;
+        link.href = downloadUrl;
         link.download = filename;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        URL.revokeObjectURL(downloadUrl);
+
+        toast({
+          title: `Exported ${entity} as ${config.extension.toUpperCase()}`,
+          description: appliedFilters.length > 0
+            ? `Filters: ${appliedFilters.join(", ")}`
+            : "No filters applied — exported all records",
+          variant: "success",
+        });
       } catch (error) {
         console.error(
           `[ExportDropdown] Failed to export ${entity} as ${format}:`,
           error instanceof Error ? error.message : error,
         );
+        toast({
+          title: "Export failed",
+          description: error instanceof Error ? error.message : "Unknown error",
+          variant: "error",
+        });
       } finally {
         setLoadingFormat(null);
       }
     },
-    [entity, filters],
+    [entity, filters, toast],
   );
 
   return (

@@ -72,6 +72,7 @@ export default function CandidatesPage() {
   const [showImport, setShowImport] = useState(false);
   const [creating, setCreating] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
   const [customValues, setCustomValues] = useState<Record<string, unknown>>({});
   const { fields: customFields } = useCustomFields("candidate");
   const { can } = usePermissions();
@@ -260,7 +261,7 @@ export default function CandidatesPage() {
           {can("import-export:read") && (
             <ExportDropdown
               entity="candidates"
-              filters={{ status: statusFilter, hasLinkedin: linkedinFilter === "yes" ? "true" : "" }}
+              filters={{ status: statusFilter, hasLinkedin: linkedinFilter === "yes" ? "true" : "", search: searchTerm }}
             />
           )}
           {can("import-export:create") && (
@@ -285,6 +286,7 @@ export default function CandidatesPage() {
         searchPlaceholder="Search candidates..."
         keyExtractor={(c) => c.id}
         onRowClick={(c) => router.push(`/candidates/${c.id}`)}
+        onSearchChange={setSearchTerm}
         emptyMessage="No candidates found. Add your first candidate to get started."
         selectable={can("candidates:update")}
         bulkActions={[

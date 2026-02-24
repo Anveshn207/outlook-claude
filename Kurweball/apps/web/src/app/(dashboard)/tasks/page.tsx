@@ -68,6 +68,7 @@ export default function TasksPage() {
   const { user } = useAuthStore();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -263,7 +264,12 @@ export default function TasksPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {can("import-export:read") && <ExportDropdown entity="tasks" />}
+          {can("import-export:read") && (
+            <ExportDropdown
+              entity="tasks"
+              filters={{ status: statusFilter, search: searchTerm }}
+            />
+          )}
           <Button onClick={() => setShowCreate(true)}>
             <Plus className="h-4 w-4" />
             Add Task
@@ -275,6 +281,7 @@ export default function TasksPage() {
         key={refreshKey}
         columns={columns}
         fetchData={fetchTasks}
+        onSearchChange={setSearchTerm}
         searchPlaceholder="Search tasks..."
         keyExtractor={(t) => t.id}
         emptyMessage="No tasks found. Create your first task to get started."

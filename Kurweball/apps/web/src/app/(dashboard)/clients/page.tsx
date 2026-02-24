@@ -53,6 +53,7 @@ const statusColors: Record<string, string> = {
 export default function ClientsPage() {
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -208,7 +209,12 @@ export default function ClientsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {can("import-export:read") && <ExportDropdown entity="clients" />}
+          {can("import-export:read") && (
+            <ExportDropdown
+              entity="clients"
+              filters={{ status: statusFilter, search: searchTerm }}
+            />
+          )}
           {can("import-export:create") && (
             <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
               <Upload className="h-4 w-4" />
@@ -228,6 +234,7 @@ export default function ClientsPage() {
         key={refreshKey}
         columns={columns}
         fetchData={fetchClients}
+        onSearchChange={setSearchTerm}
         searchPlaceholder="Search clients..."
         keyExtractor={(c) => c.id}
         onRowClick={(c) => router.push(`/clients/${c.id}`)}
