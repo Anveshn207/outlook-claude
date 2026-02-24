@@ -68,6 +68,13 @@ export class ImportService {
     const allRows = await this.getAllRows(filePath);
     const fieldDefs = this.getFieldDefinitions(entityType);
 
+    // Fetch custom field definitions so we can populate customData
+    const entityTypeMap: Record<string, string> = { candidate: 'candidate', job: 'job', client: 'client' };
+    const customFields = await this.prisma.customField.findMany({
+      where: { tenantId, entityType: entityTypeMap[entityType] },
+      select: { fieldKey: true, fieldName: true },
+    });
+
     const result: ImportResult = { created: 0, skipped: 0, errors: [] };
     const activeMappings = mappings.filter((m) => m.targetField !== 'SKIP');
 
@@ -94,6 +101,11 @@ export class ImportService {
             result.skipped++;
             result.errors.push({ row: rowIndex, message: 'Missing required fields' });
             continue;
+          }
+
+          // Populate customData for matching custom field definitions
+          if (customFields.length > 0) {
+            data.customData = this.buildCustomData(data, customFields);
           }
 
           createDataBatch.push({ data, rowIndex });
@@ -159,6 +171,7 @@ export class ImportService {
 
   /**
    * Re-read the file to get ALL rows (not just the sample).
+   * Uses the same header-row detection as the file parser so column names match.
    */
   private async getAllRows(filePath: string): Promise<Record<string, string>[]> {
     const XLSX = await import('xlsx');
@@ -167,9 +180,13 @@ export class ImportService {
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
 
+    const headerRow = this.fileParser.detectHeaderRow(sheet);
+    this.logger.log(`[ImportService] getAllRows: header row index=${headerRow}`);
+
     return XLSX.utils.sheet_to_json<Record<string, string>>(sheet, {
       raw: false,
       defval: '',
+      range: headerRow,
     });
   }
 
@@ -244,7 +261,7 @@ export class ImportService {
 
       // clientId is required for jobs
       if (!data.clientId) {
-        return null;
+        throw new Error('Missing required field: Client Name');
       }
     }
 
@@ -253,10 +270,14 @@ export class ImportService {
       .filter((f) => f.required)
       .filter((f) => !(entityType === 'job' && f.key === 'clientName'));
 
+    const missingFields: string[] = [];
     for (const field of requiredFields) {
       if (data[field.key] === undefined || data[field.key] === null || data[field.key] === '') {
-        return null;
+        missingFields.push(field.label);
       }
+    }
+    if (missingFields.length > 0) {
+      throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
     }
 
     // Attach tenant and creator
@@ -287,13 +308,90 @@ export class ImportService {
         return isNaN(parsed.getTime()) ? undefined : parsed;
       }
 
-      case 'enum':
-        return rawValue.toUpperCase();
+      case 'enum': {
+        const upper = rawValue.toUpperCase().replace(/[\s_-]+/g, '_');
+        // If the value directly matches an allowed enum, use it
+        if (fieldDef.enumValues?.includes(upper)) return upper;
+        // Otherwise, try smart mapping for known fields
+        return this.mapEnumValue(fieldDef.key, rawValue, fieldDef.enumValues) ?? upper;
+      }
 
       case 'string':
       default:
         return rawValue;
     }
+  }
+
+  /**
+   * Map common real-world values to their closest enum counterpart.
+   * Returns undefined if no mapping found (falls back to raw uppercase).
+   */
+  private mapEnumValue(
+    fieldKey: string,
+    rawValue: string,
+    allowedValues?: string[],
+  ): string | undefined {
+    const lower = rawValue.toLowerCase().trim();
+
+    if (fieldKey === 'source') {
+      // Job board names → JOBBOARD
+      const jobBoards = [
+        'dice', 'indeed', 'monster', 'ziprecruiter', 'jooble',
+        'neuvoo', 'adzuna', 'glassdoor', 'careerbuilder', 'dr.job',
+        'simplyhired', 'google jobs', 'talent.com', 'naukri',
+      ];
+      if (jobBoards.some((jb) => lower.includes(jb))) return 'JOBBOARD';
+      if (lower.includes('linkedin')) return 'LINKEDIN';
+      if (lower.includes('referral') || lower.includes('referred')) return 'REFERRAL';
+      if (lower.includes('direct') || lower.includes('walk-in') || lower.includes('career portal')) return 'DIRECT';
+      return 'OTHER';
+    }
+
+    if (fieldKey === 'status') {
+      if (['active', 'new', 'new lead', 'available', 'open'].some((s) => lower.includes(s))) return 'ACTIVE';
+      if (['passive', 'not looking', 'not active'].some((s) => lower.includes(s))) return 'PASSIVE';
+      if (['placed', 'hired', 'joined', 'closed'].some((s) => lower.includes(s))) return 'PLACED';
+      if (['dnd', 'do not disturb', 'do not contact', 'blacklist'].some((s) => lower.includes(s))) return 'DND';
+      return allowedValues?.[0] ?? 'ACTIVE';
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Build customData JSON from imported data and tenant custom field definitions.
+   * Maps model column values to their corresponding custom field keys.
+   */
+  private buildCustomData(
+    data: Record<string, any>,
+    customFields: { fieldKey: string; fieldName: string }[],
+  ): Record<string, any> {
+    // Map model column names to custom field keys
+    const modelToCustom: Record<string, string[]> = {};
+    for (const cf of customFields) {
+      const cfKeyNorm = cf.fieldKey.toLowerCase().replace(/[\s_\-]/g, '');
+      const cfNameNorm = cf.fieldName.toLowerCase().replace(/[\s_\-]/g, '');
+      // Check all data keys for matches
+      for (const dataKey of Object.keys(data)) {
+        const dkNorm = dataKey.toLowerCase().replace(/[\s_\-]/g, '');
+        if (dkNorm === cfKeyNorm || dkNorm === cfNameNorm) {
+          if (!modelToCustom[dataKey]) modelToCustom[dataKey] = [];
+          modelToCustom[dataKey].push(cf.fieldKey);
+        }
+      }
+    }
+
+    const customData: Record<string, any> = {};
+    for (const [dataKey, cfKeys] of Object.entries(modelToCustom)) {
+      const value = data[dataKey];
+      if (value !== undefined && value !== null && value !== '') {
+        for (const cfKey of cfKeys) {
+          customData[cfKey] = value instanceof Date ? value.toISOString() : String(value);
+        }
+      }
+    }
+
+    return customData;
   }
 
   /**
