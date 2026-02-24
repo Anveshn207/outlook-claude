@@ -240,6 +240,213 @@ export class ExportService {
     return this.buildExport('submissions', headers, rows, format);
   }
 
+  async exportInterviews(
+    tenantId: string,
+    format: ExportFormat,
+    search?: string,
+    status?: string,
+  ): Promise<ExportResult> {
+    const where: any = { tenantId };
+
+    if (search) {
+      where.OR = [
+        { candidate: { firstName: { contains: search, mode: 'insensitive' } } },
+        { candidate: { lastName: { contains: search, mode: 'insensitive' } } },
+        { job: { title: { contains: search, mode: 'insensitive' } } },
+      ];
+    }
+
+    if (status) {
+      where.status = status;
+    }
+
+    const interviews = await this.prisma.interview.findMany({
+      where,
+      include: { candidate: true, job: true, createdBy: true },
+    });
+
+    const headers = [
+      'Candidate',
+      'Job',
+      'Type',
+      'Scheduled At',
+      'Duration (min)',
+      'Status',
+      'Rating',
+      'Interviewer',
+      'Location',
+    ];
+
+    const rows = interviews.map((i) => [
+      `${i.candidate.firstName} ${i.candidate.lastName}`,
+      i.job.title,
+      i.type,
+      i.scheduledAt.toISOString().split('T')[0],
+      String(i.durationMinutes),
+      i.status,
+      i.rating?.toString() ?? '',
+      i.interviewerName ?? '',
+      i.location ?? '',
+    ]);
+
+    return this.buildExport('interviews', headers, rows, format);
+  }
+
+  async exportTasks(
+    tenantId: string,
+    format: ExportFormat,
+    search?: string,
+    status?: string,
+  ): Promise<ExportResult> {
+    const where: any = { tenantId };
+
+    if (search) {
+      where.title = { contains: search, mode: 'insensitive' };
+    }
+
+    if (status) {
+      where.status = status;
+    }
+
+    const tasks = await this.prisma.task.findMany({
+      where,
+      include: { assignedTo: true, createdBy: true },
+    });
+
+    const headers = [
+      'Title',
+      'Description',
+      'Due Date',
+      'Priority',
+      'Status',
+      'Assigned To',
+      'Created By',
+      'Completed At',
+    ];
+
+    const rows = tasks.map((t) => [
+      t.title,
+      t.description ?? '',
+      t.dueDate?.toISOString().split('T')[0] ?? '',
+      t.priority,
+      t.status,
+      t.assignedTo ? `${t.assignedTo.firstName} ${t.assignedTo.lastName}` : '',
+      `${t.createdBy.firstName} ${t.createdBy.lastName}`,
+      t.completedAt?.toISOString().split('T')[0] ?? '',
+    ]);
+
+    return this.buildExport('tasks', headers, rows, format);
+  }
+
+  async exportBenchSales(
+    tenantId: string,
+    format: ExportFormat,
+    search?: string,
+    status?: string,
+  ): Promise<ExportResult> {
+    const where: any = { tenantId };
+
+    if (search) {
+      where.OR = [
+        { consultant: { contains: search, mode: 'insensitive' } },
+        { vendor: { contains: search, mode: 'insensitive' } },
+        { client: { contains: search, mode: 'insensitive' } },
+        { position: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (status) {
+      where.status = status;
+    }
+
+    const benchSales = await this.prisma.benchSalesSubmission.findMany({ where });
+
+    const headers = [
+      'Consultant',
+      'Vendor',
+      'Client',
+      'Position',
+      'Status',
+      'Billing Rate',
+      'Work Location',
+      'Submission Date',
+      'Interview Type',
+      'Comments',
+    ];
+
+    const rows = benchSales.map((b) => [
+      b.consultant,
+      b.vendor ?? '',
+      b.client ?? '',
+      b.position ?? '',
+      b.status ?? '',
+      b.billingRate ?? '',
+      b.workLocation ?? '',
+      b.submissionDate?.toISOString().split('T')[0] ?? '',
+      b.interviewType ?? '',
+      b.comments ?? '',
+    ]);
+
+    return this.buildExport('bench-sales', headers, rows, format);
+  }
+
+  async exportUsers(
+    tenantId: string,
+    format: ExportFormat,
+    search?: string,
+    status?: string,
+  ): Promise<ExportResult> {
+    const where: any = { tenantId };
+
+    if (search) {
+      where.OR = [
+        { firstName: { contains: search, mode: 'insensitive' } },
+        { lastName: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (status) {
+      if (status === 'ACTIVE') {
+        where.isActive = true;
+      } else if (status === 'INACTIVE') {
+        where.isActive = false;
+      }
+    }
+
+    const users = await this.prisma.user.findMany({
+      where,
+      select: {
+        firstName: true,
+        lastName: true,
+        email: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+      },
+    });
+
+    const headers = [
+      'First Name',
+      'Last Name',
+      'Email',
+      'Role',
+      'Active',
+      'Joined',
+    ];
+
+    const rows = users.map((u) => [
+      u.firstName,
+      u.lastName,
+      u.email,
+      u.role,
+      u.isActive ? 'Yes' : 'No',
+      u.createdAt.toISOString().split('T')[0],
+    ]);
+
+    return this.buildExport('users', headers, rows, format);
+  }
+
   private async buildExport(
     entity: string,
     headers: string[],

@@ -26,6 +26,7 @@ import { DataTable, Column } from "@/components/shared/data-table";
 import { apiFetch } from "@/lib/api";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useToast } from "@/hooks/use-toast";
+import { ExportDropdown } from "@/components/shared/export-dropdown";
 
 interface UserRow {
   id: string;
@@ -321,12 +322,15 @@ export default function TeamPage() {
             Manage your team members and their access levels.
           </p>
         </div>
-        {can("users:create") && (
-          <Button onClick={() => setShowInvite(true)}>
-            <UserPlus className="h-4 w-4" />
-            Invite User
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {can("import-export:read") && <ExportDropdown entity="users" />}
+          {can("users:create") && (
+            <Button onClick={() => setShowInvite(true)}>
+              <UserPlus className="h-4 w-4" />
+              Invite User
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Pending Invites */}

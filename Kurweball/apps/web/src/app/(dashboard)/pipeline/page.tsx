@@ -26,6 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { GripVertical, Loader2, UserPlus } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { usePermissions } from "@/hooks/use-permissions";
+import { ExportDropdown } from "@/components/shared/export-dropdown";
 
 /* ─── Types ─── */
 
@@ -359,6 +360,8 @@ export default function PipelinePage() {
               ))}
             </SelectContent>
           </Select>
+
+          {can("import-export:read") && <ExportDropdown entity="submissions" />}
 
           {/* Submit candidate button */}
           <Button onClick={() => setShowSubmit(true)}>

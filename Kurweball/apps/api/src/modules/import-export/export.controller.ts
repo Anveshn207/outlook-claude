@@ -82,4 +82,76 @@ export class ExportController {
     res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
     res.send(result.buffer);
   }
+
+  @Get('interviews')
+  @RequirePermissions('import-export:read')
+  async exportInterviews(
+    @Query() query: ExportQueryDto,
+    @CurrentUser() user: CurrentUserPayload,
+    @Res() res: Response,
+  ) {
+    const result = await this.exportService.exportInterviews(
+      user.tenantId,
+      query.format,
+      query.search,
+      query.status,
+    );
+    res.setHeader('Content-Type', result.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+    res.send(result.buffer);
+  }
+
+  @Get('tasks')
+  @RequirePermissions('import-export:read')
+  async exportTasks(
+    @Query() query: ExportQueryDto,
+    @CurrentUser() user: CurrentUserPayload,
+    @Res() res: Response,
+  ) {
+    const result = await this.exportService.exportTasks(
+      user.tenantId,
+      query.format,
+      query.search,
+      query.status,
+    );
+    res.setHeader('Content-Type', result.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+    res.send(result.buffer);
+  }
+
+  @Get('bench-sales')
+  @RequirePermissions('import-export:read')
+  async exportBenchSales(
+    @Query() query: ExportQueryDto,
+    @CurrentUser() user: CurrentUserPayload,
+    @Res() res: Response,
+  ) {
+    const result = await this.exportService.exportBenchSales(
+      user.tenantId,
+      query.format,
+      query.search,
+      query.status,
+    );
+    res.setHeader('Content-Type', result.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+    res.send(result.buffer);
+  }
+
+  @Get('users')
+  @RequirePermissions('import-export:read')
+  async exportUsers(
+    @Query() query: ExportQueryDto,
+    @CurrentUser() user: CurrentUserPayload,
+    @Res() res: Response,
+  ) {
+    const result = await this.exportService.exportUsers(
+      user.tenantId,
+      query.format,
+      query.search,
+      query.status,
+    );
+    res.setHeader('Content-Type', result.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+    res.send(result.buffer);
+  }
 }

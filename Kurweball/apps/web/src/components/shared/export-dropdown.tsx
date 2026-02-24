@@ -13,7 +13,7 @@ import {
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "/api";
 
-type ExportEntity = "candidates" | "jobs" | "clients" | "submissions";
+type ExportEntity = "candidates" | "jobs" | "clients" | "submissions" | "interviews" | "tasks" | "bench-sales" | "users";
 type ExportFormat = "csv" | "xlsx" | "docx";
 
 interface ExportDropdownProps {

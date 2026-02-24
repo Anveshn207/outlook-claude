@@ -26,6 +26,7 @@ import { DataTable, Column } from "@/components/shared/data-table";
 import { apiFetch } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 import { usePermissions } from "@/hooks/use-permissions";
+import { ExportDropdown } from "@/components/shared/export-dropdown";
 
 interface TaskRow {
   id: string;
@@ -261,10 +262,13 @@ export default function TasksPage() {
             Manage follow-ups, deadlines, and action items.
           </p>
         </div>
-        <Button onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4" />
-          Add Task
-        </Button>
+        <div className="flex items-center gap-2">
+          {can("import-export:read") && <ExportDropdown entity="tasks" />}
+          <Button onClick={() => setShowCreate(true)}>
+            <Plus className="h-4 w-4" />
+            Add Task
+          </Button>
+        </div>
       </div>
 
       <DataTable

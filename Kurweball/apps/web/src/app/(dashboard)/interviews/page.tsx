@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Plus, CalendarDays, Star, MessageSquare, ShieldAlert } from "lucide-react";
+import { Plus, CalendarDays, Star, MessageSquare, ShieldAlert, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -26,6 +26,7 @@ import { DataTable, Column } from "@/components/shared/data-table";
 import { apiFetch } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 import { usePermissions } from "@/hooks/use-permissions";
+import { ExportDropdown } from "@/components/shared/export-dropdown";
 
 interface InterviewRow {
   id: string;
@@ -245,6 +246,16 @@ export default function InterviewsPage() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this interview? This action cannot be undone.")) return;
+    try {
+      await apiFetch(`/interviews/${id}`, { method: "DELETE" });
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      console.error("[InterviewsPage] Delete failed:", err);
+    }
+  };
+
   const openFeedbackDialog = (interview: InterviewRow) => {
     setFeedbackInterview(interview);
     setFeedbackStatus(interview.status === "SCHEDULED" ? "COMPLETED" : interview.status);
@@ -377,21 +388,37 @@ export default function InterviewsPage() {
     {
       key: "actions",
       header: "",
-      render: (row) =>
-        row.status === "SCHEDULED" ? (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-            onClick={(e) => {
-              e.stopPropagation();
-              openFeedbackDialog(row);
-            }}
-          >
-            <MessageSquare className="mr-1 h-3.5 w-3.5" />
-            Feedback
-          </Button>
-        ) : null,
+      render: (row) => (
+        <div className="flex items-center gap-1">
+          {row.status === "SCHEDULED" && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+              onClick={(e) => {
+                e.stopPropagation();
+                openFeedbackDialog(row);
+              }}
+            >
+              <MessageSquare className="mr-1 h-3.5 w-3.5" />
+              Feedback
+            </Button>
+          )}
+          {can("interviews:delete") && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(row.id);
+              }}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          )}
+        </div>
+      ),
     },
   ];
 
@@ -405,10 +432,13 @@ export default function InterviewsPage() {
             Schedule and manage candidate interviews.
           </p>
         </div>
-        <Button onClick={() => setShowCreate(true)} className="w-fit">
-          <Plus className="h-4 w-4" />
-          Schedule Interview
-        </Button>
+        <div className="flex items-center gap-2">
+          {can("import-export:read") && <ExportDropdown entity="interviews" />}
+          <Button onClick={() => setShowCreate(true)} className="w-fit">
+            <Plus className="h-4 w-4" />
+            Schedule Interview
+          </Button>
+        </div>
       </div>
 
       {/* DataTable */}

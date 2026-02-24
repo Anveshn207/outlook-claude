@@ -59,6 +59,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePermissions } from "@/hooks/use-permissions";
 import { apiFetch } from "@/lib/api";
+import { ExportDropdown } from "@/components/shared/export-dropdown";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -561,12 +562,15 @@ export default function BenchSalesPage() {
             <p className="text-sm text-muted-foreground">{total} submissions</p>
           </div>
         </div>
-        {can("bench-sales:create") && (
-          <Button onClick={() => setShowCreate(true)} className="gap-1.5">
-            <Plus className="h-4 w-4" />
-            Add Record
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {can("import-export:read") && <ExportDropdown entity="bench-sales" />}
+          {can("bench-sales:create") && (
+            <Button onClick={() => setShowCreate(true)} className="gap-1.5">
+              <Plus className="h-4 w-4" />
+              Add Record
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Toolbar: Search + Filters + Column Visibility */}
