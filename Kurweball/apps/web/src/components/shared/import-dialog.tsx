@@ -274,12 +274,10 @@ export function ImportDialog({
 
       setMappings(suggestions);
 
-      // Auto-advance: if we have good mappings, skip to preview
+      // Always show mapping step so users can review and adjust
       const mapped = suggestions.filter((s) => s.targetField);
-      const highConfidence = mapped.filter((s) => s.confidence >= 0.7);
-      if (mapped.length >= 2 && highConfidence.length === mapped.length) {
+      if (mapped.length >= 2) {
         setAutoMapped(true);
-        setStep(3);
       }
     } catch (err) {
       console.error("[ImportDialog] Analysis failed:", err);
@@ -356,7 +354,7 @@ export function ImportDialog({
 
   const stepDescriptions: Record<number, string> = {
     1: "Upload a CSV or Excel file to get started.",
-    2: "Match your file columns to the correct fields.",
+    2: "We analyzed your data and auto-matched what we could. Review and fix any unmatched columns.",
     3: autoMapped
       ? "Columns were auto-detected. Review and import."
       : "Review the data before importing.",
@@ -368,7 +366,7 @@ export function ImportDialog({
   // -------------------------------------------------------------------------
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{stepTitles[step]}</DialogTitle>
           <DialogDescription>{stepDescriptions[step]}</DialogDescription>
